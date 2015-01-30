@@ -1,0 +1,3 @@
+SECRET = 'yoursecret'
+REPOS = [{'repo': 'user/repo',
+         'folder': '/your/repo'}]

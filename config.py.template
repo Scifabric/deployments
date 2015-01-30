@@ -1,4 +1,10 @@
 DEBUG = False
 SECRET = 'yoursecret'
 REPOS = [{'repo': 'user/repo',
-         'folder': '/your/repo'}]
+         'folder': '/your/repo',
+         'commands': [
+             ['git', 'fetch'],
+             ['git', 'pull', 'origin', 'master']
+            ]
+          }
+         ]

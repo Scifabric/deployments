@@ -24,23 +24,21 @@ app = Flask(__name__)
 @app.route("/", methods=['GET', 'POST'])
 def event_handler():
     """Handle deployment webhooks from Github."""
-    signature = request.headers.get('X-GITHUB-SIGNATURE')
-    if signature is None:
-        return abort(403)
     sha_name, signature = request.headers.get('X-Hub-Signature').split('=')
+    if signature is None:
+       return abort(403)
     mac = hmac.new(config.SECRET, msg=request.data, digestmod=hashlib.sha1)
     if sha_name == 'sha1' and compare_digest(mac.hexdigest(), bytes(signature)):
         if request.method == 'POST':
-            if request.headers.get('X-GITHUB-EVENT') == 'pull_request':
+            if request.headers.get('X-GitHub-Event') == 'pull_request':
                 if request.json['action'] == 'closed' and request.json['pull_request']['merged'] is True:
                     print start_deployment(request.json['pull_request'])
                     return "Pull request merged!"
                 return "Pull Request created!"
-            if request.headers.get('X-GITHUB-EVENT') == 'deployment':
-                print request.json
-                return request.json
+            else:
+                return abort(501)
         else:
-            return "Hello!"
+            return abort(501)
     else:
         return abort(403)
 
@@ -52,6 +50,7 @@ def start_deployment(pull_request):
         if repo['repo'] == pull_request['head']['repo']['full_name']:
             for command in repo['commands']:
                 p = subprocess.Popen(command, cwd=repo['folder'])
+                print p
                 p.wait()
             return "Deployment done!"
     return "Deployment canceled."

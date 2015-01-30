@@ -1,3 +1,19 @@
+# -*- coding: utf8 -*-
+#
+# Copyright (C) 2015 Daniel Lombraña González
+#
+# Deployments is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Deployments is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with Deployments.  If not, see <http://www.gnu.org/licenses/>.
 from flask import Flask, request, abort
 import subprocess
 import config

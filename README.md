@@ -5,7 +5,12 @@ from Github repositories.
 
 ## Setup
 
-Basically, go to your repository and add a webhook. 
+Basically, go to your repository and add a webhook.  Configure it enabling the
+following individual elements:
+
+ * Deployment status
+ * Deployment
+ * Pull Request
 
 NOTE: it's important to add a secret to protect your deployments. Don't use
 something easy.

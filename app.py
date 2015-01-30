@@ -25,6 +25,8 @@ app = Flask(__name__)
 def event_handler():
     """Handle deployment webhooks from Github."""
     signature = request.headers.get('X-GITHUB-SIGNATURE')
+    if signature is None:
+        return abort(403)
     sha_name, signature = request.headers.get('X-Hub-Signature').split('=')
     mac = hmac.new(config.SECRET, msg=request.data, digestmod=hashlib.sha1)
     if sha_name == 'sha1' and compare_digest(mac.hexdigest(), bytes(signature)):
@@ -48,8 +50,9 @@ def start_deployment(pull_request):
     print "Creating deployment"
     for repo in config.REPOS:
         if repo['repo'] == pull_request['head']['repo']['full_name']:
-            subprocess.Popen(['git', "fetch"], cwd=repo['folder'])
-            subprocess.Popen(['git', 'pull',  'origin', 'master'], cwd=repo['folder'])
+            for command in repo['commands']:
+                p = subprocess.Popen(command, cwd=repo['folder'])
+                p.wait()
             return "Deployment done!"
     return "Deployment canceled."
 

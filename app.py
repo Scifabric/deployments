@@ -19,6 +19,8 @@ import subprocess
 import config
 import hmac
 import hashlib
+import json
+import requests
 app = Flask(__name__)
 
 @app.route("/", methods=['GET', 'POST'])
@@ -29,6 +31,7 @@ def event_handler():
             if request.headers.get('X-GitHub-Event') == 'pull_request':
                 if (request.json['action'] == 'closed' and
                         request.json['pull_request']['merged'] is True):
+                    print create_deployment(request.json['pull_request'], config.TOKEN)
                     print start_deployment(request.json['pull_request'])
                     return "Pull request merged!"
                 return "Pull Request created!"
@@ -51,6 +54,23 @@ def start_deployment(pull_request):
                 p.wait()
             return "Deployment done!"
     return "Deployment canceled."
+
+
+def create_deployment(pull_request, token):
+    """Create a deployment."""
+    user = pull_request['user']['login']
+    owner = pull_request['head']['repo']['owner']['login']
+    repo = pull_request['head']['repo']['full_name']
+    payload = {'environment': 'production', 'deploy_user': user}
+    url = 'https://api.github.com/repos/%s/deployments' % (repo)
+    headers = {'Content-type': 'application/json'}
+    auth = (token, '')
+    data = {'ref': pull_request['head']['ref'],
+            'payload': payload,
+            'description': 'mydesc'}
+    r = requests.post(url, data=json.dumps(data), headers=headers,
+                      auth=auth)
+
 
 # See http://stackoverflow.com/questions/18168819/how-to-securely-verify-an-hmac-in-python-2-7
 def compare_digest(x, y):

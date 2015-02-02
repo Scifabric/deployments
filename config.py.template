@@ -1,5 +1,6 @@
 DEBUG = False
 SECRET = 'yoursecret'
+SLACK_WEBHOOK = 'yourslackwebhook'
 REPOS = [{'repo': 'user/repo',
          'folder': '/your/repo',
          'commands': [

@@ -65,7 +65,7 @@ def start_deployment(pull_request):
 def create_deployment(pull_request, token):
     """Create a deployment."""
     user = pull_request['user']['login']
-    owner = pull_request['head']['repo']['owner']['login']
+    # owner = pull_request['head']['repo']['owner']['login']
     repo = pull_request['head']['repo']['full_name']
     payload = {'environment': 'production', 'deploy_user': user}
     url = 'https://api.github.com/repos/%s/deployments' % (repo)

@@ -1,10 +1,12 @@
 DEBUG = False
 SECRET = 'yoursecret'
 REPOS = [{'repo': 'user/repo',
-         'folder': '/your/repo',
-         'commands': [
-             ['git', 'fetch'],
-             ['git', 'pull', 'origin', 'master']
-            ]
-          }
-         ]
+            ansible_hosts: 'ansible_hosts',
+            ansible_playbook: 'playbook.yml'
+#          'folder': '/your/repo',
+#          'commands': [
+#              ['git', 'fetch'],
+#              ['git', 'pull', 'origin', 'master']
+#             ]
+           }
+          ]

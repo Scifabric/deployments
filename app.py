@@ -19,6 +19,10 @@ import subprocess
 import config
 import hmac
 import hashlib
+import ansible.playbook
+from ansible import callbacks
+from ansible import utils
+
 app = Flask(__name__)
 
 @app.route("/", methods=['GET', 'POST'])
@@ -42,16 +46,35 @@ def event_handler():
     else:
         return abort(403)
 
+def run_ansible_playbook(ansible_hosts, playbook):
+    """
+    Run Ansible like ansible-playbook command. Similar to:
+    ansible-playbook -i ansible_hosts playbook.yml
+    """
+    stats = callbacks.AggregateStats()
+    playbook_cb = callbacks.PlaybookCallbacks(verbose=utils.VERBOSITY)
+    inventory = ansible.inventory.Inventory(ansible_hosts)
+    runner_cb = callbacks.PlaybookRunnerCallbacks(stats,
+                                                  verbose=utils.VERBOSITY)
+    pb = ansible.playbook.PlayBook(playbook=playbook,
+                                   callbacks=playbook_cb,
+                                   runner_callbacks=runner_cb,
+                                   stats=stats, inventory=inventory)
+    pb.run()
 
 def start_deployment(pull_request):
     """Start a deployment."""
     print "Creating deployment"
     for repo in config.REPOS:
         if repo['repo'] == pull_request['head']['repo']['full_name']:
-            for command in repo['commands']:
-                p = subprocess.Popen(command, cwd=repo['folder'])
-                print p
-                p.wait()
+            # ansible_hosts and Playbook defined? Then run only Ansible.
+            if repo['ansible_hosts'] and repo['ansible_playbook']:
+                run_ansible_playbook(repo['ansible_hosts'], repo['ansible_playbook'])
+            else:
+                for command in repo['commands']:
+                    p = subprocess.Popen(command, cwd=repo['folder'])
+                    print p
+                    p.wait()
             return "Deployment done!"
     return "Deployment canceled."
 

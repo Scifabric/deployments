@@ -66,7 +66,10 @@ def compare_digest(x, y):
 
 def authorize(request, config):
     """Authorize Github webhook."""
-    sha_name, signature = request.headers.get('X-Hub-Signature').split('=')
+    x_hub_signature = request.headers.get('X-Hub-Signature')
+    if x_hub_signature is None:
+        return False
+    sha_name, signature = x_hub_signature.split('=')
     if signature is None:
        return False
     mac = hmac.new(config.SECRET, msg=request.data, digestmod=hashlib.sha1)

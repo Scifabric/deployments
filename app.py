@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Deployments.  If not, see <http://www.gnu.org/licenses/>.
 from flask import Flask, request, abort
-import subprocess
+from subprocess import Popen, PIPE, CalledProcessError
 import config
 import hmac
 import hashlib
@@ -36,7 +36,7 @@ def event_handler():
                 return "Pull Request created!"
             elif request.headers.get('X-GitHub-Event') == 'deployment':
                 print "Process Deployment"
-                print start_deployment(request.json['pull_request'])
+                print process_deployment(request.json, config.TOKEN)
                 return "Process Deployment"
             elif request.headers.get('X-GitHub-Event') == 'deployment_status':
                 print "Update Deployment Status"
@@ -49,17 +49,31 @@ def event_handler():
         return abort(403)
 
 
-def start_deployment(pull_request):
-    """Start a deployment."""
-    print "Creating deployment"
-    for repo in config.REPOS:
-        if repo['repo'] == pull_request['head']['repo']['full_name']:
-            for command in repo['commands']:
-                p = subprocess.Popen(command, cwd=repo['folder'])
-                print p
-                p.wait()
-            return "Deployment done!"
-    return "Deployment canceled."
+def process_deployment(deployment, token):
+    """Process deployment."""
+    try:
+        print deployment['repository']['full_name']
+        for repo in config.REPOS:
+            if repo['repo'] == deployment['repository']['full_name']:
+                update_deployment(deployment, status='pending')
+                for command in repo['commands']:
+                    p = Popen(command, cwd=repo['folder'], stderr=PIPE)
+                    return_code = p.wait()
+                    if return_code != 0:
+                        raise CalledProcessError(return_code,
+                                                 command,
+                                                 output=p.communicate())
+                update_deployment(deployment, status='success')
+                return "Deployment done!"
+        update_deployment(deployment, status='error')
+    except CalledProcessError as e:
+        message = "command: %s ERROR: %s" % (e.cmd, e.output[1])
+        update_deployment(deployment, status='error', message=message)
+        return "Deployment canceled."
+    except OSError as e:
+        update_deployment(deployment, status='error', message=str(e))
+        return "Deployment canceled."
+
 
 
 def create_deployment(pull_request, token):
@@ -74,8 +88,29 @@ def create_deployment(pull_request, token):
     data = {'ref': pull_request['head']['ref'],
             'payload': payload,
             'description': 'mydesc'}
-    requests.post(url, data=json.dumps(data), headers=headers,
-                  auth=auth)
+    deployment = requests.post(url, data=json.dumps(data), headers=headers,
+                               auth=auth)
+    print deployment
+    return deployment
+
+
+def update_deployment(deployment, status, message="ERROR"):
+    """Update a deployment."""
+    token = config.TOKEN
+    repo = deployment['repository']['full_name']
+    url = 'https://api.github.com/repos/%s/deployments/%s/statuses' % (repo, deployment['deployment']['id'])
+    print url
+    headers = {'Content-type': 'application/json'}
+    auth = (token, '')
+    if status == 'success':
+        msg = "The deployment has been successful."
+    else:
+        msg = message
+    data = {'state': status,
+            'target_url': 'http://myurl.com/a/',
+            'description': msg}
+    r = requests.post(url, data=json.dumps(data), headers=headers, auth=auth)
+    print r.text
 
 
 # See http://stackoverflow.com/questions/18168819/how-to-securely-verify-an-hmac-in-python-2-7

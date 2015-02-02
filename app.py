@@ -74,8 +74,8 @@ def create_deployment(pull_request, token):
     data = {'ref': pull_request['head']['ref'],
             'payload': payload,
             'description': 'mydesc'}
-    r = requests.post(url, data=json.dumps(data), headers=headers,
-                      auth=auth)
+    requests.post(url, data=json.dumps(data), headers=headers,
+                  auth=auth)
 
 
 # See http://stackoverflow.com/questions/18168819/how-to-securely-verify-an-hmac-in-python-2-7

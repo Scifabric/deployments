@@ -32,9 +32,15 @@ def event_handler():
                 if (request.json['action'] == 'closed' and
                         request.json['pull_request']['merged'] is True):
                     print create_deployment(request.json['pull_request'], config.TOKEN)
-                    print start_deployment(request.json['pull_request'])
                     return "Pull request merged!"
                 return "Pull Request created!"
+            elif request.headers.get('X-GitHub-Event') == 'deployment':
+                print "Process Deployment"
+                print start_deployment(request.json['pull_request'])
+                return "Process Deployment"
+            elif request.headers.get('X-GitHub-Event') == 'deployment_status':
+                print "Update Deployment Status"
+                return "Update Deployment Status"
             else:
                 return abort(501)
         else:

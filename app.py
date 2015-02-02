@@ -21,6 +21,7 @@ import hmac
 import hashlib
 import json
 import requests
+
 app = Flask(__name__)
 
 @app.route("/", methods=['GET', 'POST'])
@@ -40,6 +41,7 @@ def event_handler():
                 return "Process Deployment"
             elif request.headers.get('X-GitHub-Event') == 'deployment_status':
                 print "Update Deployment Status"
+                communicate_deployment(request.json)
                 return "Update Deployment Status"
             else:
                 return abort(501)
@@ -69,7 +71,7 @@ def process_deployment(deployment, token):
     except CalledProcessError as e:
         message = "command: %s ERROR: %s" % (e.cmd, e.output[1])
         update_deployment(deployment, status='error', message=message)
-        return "Deployment canceled."
+        return abort(500)
     except OSError as e:
         update_deployment(deployment, status='error', message=str(e))
         return "Deployment canceled."
@@ -107,10 +109,34 @@ def update_deployment(deployment, status, message="ERROR"):
     else:
         msg = message
     data = {'state': status,
-            'target_url': 'http://myurl.com/a/',
+            'target_url': 'http://example.com',
             'description': msg}
     r = requests.post(url, data=json.dumps(data), headers=headers, auth=auth)
     print r.text
+
+
+def communicate_deployment(deployment):
+    """Communicate deployment via Slack."""
+    repo = deployment['repository']['full_name']
+    repo_url = deployment['repository']['url']
+    status = deployment['deployment_status']['state']
+    status_url = deployment['deployment']['url']
+    user = deployment['deployment']['payload']['deploy_user']
+    msg ='Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
+                                                                 repo,
+                                                                 user,
+                                                                 status_url,
+                                                                 status)
+    text = {'text': msg}
+    headers = {'Content-type': 'application/json'}
+    if config.SLACK_WEBHOOK:
+        r = requests.post(config.SLACK_WEBHOOK,
+                          data=json.dumps(text), headers=headers)
+        return r.text
+    else:
+        return msg
+
+
 
 
 # See http://stackoverflow.com/questions/18168819/how-to-securely-verify-an-hmac-in-python-2-7

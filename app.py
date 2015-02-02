@@ -24,14 +24,11 @@ app = Flask(__name__)
 @app.route("/", methods=['GET', 'POST'])
 def event_handler():
     """Handle deployment webhooks from Github."""
-    sha_name, signature = request.headers.get('X-Hub-Signature').split('=')
-    if signature is None:
-       return abort(403)
-    mac = hmac.new(config.SECRET, msg=request.data, digestmod=hashlib.sha1)
-    if sha_name == 'sha1' and compare_digest(mac.hexdigest(), bytes(signature)):
+    if authorize(request, config):
         if request.method == 'POST':
             if request.headers.get('X-GitHub-Event') == 'pull_request':
-                if request.json['action'] == 'closed' and request.json['pull_request']['merged'] is True:
+                if (request.json['action'] == 'closed' and
+                        request.json['pull_request']['merged'] is True):
                     print start_deployment(request.json['pull_request'])
                     return "Pull request merged!"
                 return "Pull Request created!"
@@ -65,6 +62,18 @@ def compare_digest(x, y):
     result = 0
     result = sum(a != b for a, b in zip(x, y))
     return result == 0
+
+
+def authorize(request, config):
+    """Authorize Github webhook."""
+    sha_name, signature = request.headers.get('X-Hub-Signature').split('=')
+    if signature is None:
+       return False
+    mac = hmac.new(config.SECRET, msg=request.data, digestmod=hashlib.sha1)
+    if sha_name == 'sha1' and compare_digest(mac.hexdigest(), bytes(signature)):
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":

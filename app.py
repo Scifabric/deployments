@@ -37,8 +37,10 @@ def event_handler():
                 return "Pull Request created!"
             elif request.headers.get('X-GitHub-Event') == 'deployment':
                 print "Process Deployment"
-                print process_deployment(request.json, config.TOKEN)
-                return "Process Deployment"
+                if process_deployment(request.json, config.TOKEN):
+                    return "Deployment done!"
+                else:
+                    return abort(500)
             elif request.headers.get('X-GitHub-Event') == 'deployment_status':
                 print "Update Deployment Status"
                 communicate_deployment(request.json)
@@ -65,15 +67,15 @@ def process_deployment(deployment, token):
                                                  command,
                                                  output=p.communicate())
                 update_deployment(deployment, status='success')
-                return "Deployment done!"
+                return True
         update_deployment(deployment, status='error')
     except CalledProcessError as e:
         message = "command: %s ERROR: %s" % (e.cmd, e.output[1])
         update_deployment(deployment, status='error', message=message)
-        return abort(500)
+        return False
     except OSError as e:
         update_deployment(deployment, status='error', message=str(e))
-        return "Deployment canceled."
+        return False
 
 
 

@@ -121,7 +121,7 @@ class TestApp(Test):
                            headers=headers)
         assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
         assert "Deployment done!" in res.data, res.data
-        assert process_deployment.called_with(deployment, config.TOKEN)
+        assert process_deployment.called_with(deployment)
 
 
     @patch('app.process_deployment', return_value=False)
@@ -134,7 +134,7 @@ class TestApp(Test):
         res = self.tc.post('/', data=json.dumps(deployment),
                            headers=headers)
         assert res.status_code == 500, self.ERR_MSG_500_STATUS_CODE
-        assert process_deployment.called_with(deployment, config.TOKEN)
+        assert process_deployment.called_with(deployment)
 
 
     @patch('app.communicate_deployment')
@@ -160,7 +160,7 @@ class TestApp(Test):
                  'wait.return_value': 0}
         process_mock.configure_mock(**attrs)
         popen.return_value = process_mock
-        res = process_deployment(deployment, config.TOKEN)
+        res = process_deployment(deployment)
         assert res, res
         assert update_deployment.called_with(deployment, status='success')
 
@@ -173,7 +173,7 @@ class TestApp(Test):
                  'wait.return_value': 1}
         process_mock.configure_mock(**attrs)
         popen.return_value = process_mock
-        res = process_deployment(deployment, config.TOKEN)
+        res = process_deployment(deployment)
         assert res is False, res
         message = "command: %s ERROR: %s" % ('output', 'error')
         assert update_deployment.called_with(deployment, status='error',
@@ -189,7 +189,7 @@ class TestApp(Test):
                  'wait.side_effect': OSError}
         process_mock.configure_mock(**attrs)
         popen.return_value = process_mock
-        res = process_deployment(deployment, config.TOKEN)
+        res = process_deployment(deployment)
         assert res is False, res
         e = OSError()
         assert update_deployment.called_with(deployment, status='error',

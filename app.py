@@ -37,7 +37,7 @@ def event_handler():
                 return "Pull Request created!"
             elif request.headers.get('X-GitHub-Event') == 'deployment':
                 print "Process Deployment"
-                if process_deployment(request.json, config.TOKEN):
+                if process_deployment(request.json):
                     return "Deployment done!"
                 else:
                     return abort(500)
@@ -53,7 +53,7 @@ def event_handler():
         return abort(403)
 
 
-def process_deployment(deployment, token):
+def process_deployment(deployment):
     """Process deployment."""
     try:
         for repo in config.REPOS:

@@ -25,7 +25,7 @@ This exports:
 import config
 import json
 from base import Test
-from app import app, process_deployment
+from app import app, process_deployment, create_deployment
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
@@ -194,4 +194,10 @@ class TestApp(Test):
         assert update_deployment.called_with(deployment, status='error',
                                              message=str(e))
 
-
+    @patch('app.requests')
+    def test_create_deployment(self, requests):
+        """Test create_deployment works."""
+        data = pull_request_closed_merged['pull_request']
+        requests.post.return_value = deployment
+        res = create_deployment(data, config.TOKEN)
+        assert res == deployment, res

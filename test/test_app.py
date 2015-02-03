@@ -217,5 +217,5 @@ class TestApp(Test):
         requests.post.return_value = PseudoRequest(json.dumps(deployment),
                                                    404,
                                                    self.json_headers)
-        res = update_deployment(deployment, 'success')
+        res = update_deployment(deployment, 'error')
         assert res is False, res

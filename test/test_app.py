@@ -151,8 +151,8 @@ class TestApp(Test):
 
     @patch('app.update_deployment')
     @patch('app.Popen')
-    def test_process_deployment_fails(self, popen, update_deployment):
-        """Test process_deployment fails method."""
+    def test_process_deployment_process_error(self, popen, update_deployment):
+        """Test process_deployment process_error method."""
         process_mock = MagicMock()
         attrs = {'communicate.return_value': ('ouput', 'error'),
                  'wait.return_value': 1}
@@ -163,3 +163,19 @@ class TestApp(Test):
         message = "command: %s ERROR: %s" % ('output', 'error')
         assert update_deployment.called_with(deployment, status='error',
                                              message=message)
+
+    @patch('app.update_deployment')
+    @patch('app.Popen')
+    def test_process_deployment_oserror(self, popen, update_deployment):
+        """Test process_deployment fails method."""
+        process_mock = MagicMock()
+        attrs = {'communicate.return_value': ('ouput', 'error'),
+                 'wait.return_value': 1,
+                 'wait.side_effect': OSError}
+        process_mock.configure_mock(**attrs)
+        popen.return_value = process_mock
+        res = process_deployment(deployment, config.TOKEN)
+        assert res is False, res
+        e = OSError()
+        assert update_deployment.called_with(deployment, status='error',
+                                             message=str(e))

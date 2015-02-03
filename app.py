@@ -174,6 +174,6 @@ def authorize(request, config):
         return False
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     app.debug = config.DEBUG
     app.run()

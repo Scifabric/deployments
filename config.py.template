@@ -1,5 +1,7 @@
 DEBUG = False
 SECRET = 'yoursecret'
+TOKEN = 'your-github-token'
+SLACK_WEBHOOK = 'yourslackwebhook'
 REPOS = [{'repo': 'user/repo',
          'folder': '/your/repo',
          'commands': [

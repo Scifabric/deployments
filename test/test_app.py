@@ -158,5 +158,8 @@ class TestApp(Test):
                  'wait.return_value': 1}
         process_mock.configure_mock(**attrs)
         popen.return_value = process_mock
-        assert_raises(CalledProcessError, process_deployment,
-                      deployment, config.TOKEN)
+        res = process_deployment(deployment, config.TOKEN)
+        assert res is False, res
+        message = "command: %s ERROR: %s" % ('output', 'error')
+        assert update_deployment.called_with(deployment, status='error',
+                                             message=message)

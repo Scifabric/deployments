@@ -278,3 +278,27 @@ class TestApp(Test):
         request = MagicMock()
         request.headers = {'X-Hub-Signature': 'md5=signature'}
         assert authorize(request, config) is False
+
+    def test_authorize_case_5(self):
+        """Test authorize with signature."""
+        import hmac
+        import hashlib
+        request = MagicMock()
+        request.data = 'foo'
+        signature = 'sha1=%s' % hmac.new(config.SECRET, msg=request.data,
+                                         digestmod=hashlib.sha1).hexdigest()
+        request.headers = {'X-Hub-Signature': signature}
+        res = authorize(request, config)
+        assert res is True, res
+
+    def test_authorize_case_6(self):
+        """Test authorize with wrong signature."""
+        import hmac
+        import hashlib
+        request = MagicMock()
+        request.data = 'foo'
+        signature = 'sha1=%s1' % hmac.new(config.SECRET, msg=request.data,
+                                         digestmod=hashlib.sha1).hexdigest()
+        request.headers = {'X-Hub-Signature': signature}
+        res = authorize(request, config)
+        assert res is False, res

@@ -113,6 +113,10 @@ def update_deployment(deployment, status, message="ERROR"):
             'target_url': 'http://example.com',
             'description': msg}
     r = requests.post(url, data=json.dumps(data), headers=headers, auth=auth)
+    if r.status_code == 200:
+        return True
+    else:
+        return False
     # print r.text
 
 

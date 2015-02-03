@@ -25,11 +25,12 @@ This exports:
 import config
 import json
 from base import Test, PseudoRequest
-from app import app, process_deployment, create_deployment, update_deployment
+from app import app, process_deployment, create_deployment, update_deployment, \
+    communicate_deployment
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
-    pull_request_closed_merged, deployment
+    pull_request_closed_merged, deployment, deployment_status
 from subprocess import CalledProcessError
 
 
@@ -219,3 +220,20 @@ class TestApp(Test):
                                                    self.json_headers)
         res = update_deployment(deployment, 'error')
         assert res is False, res
+
+    @patch('app.requests')
+    def test_communicate_deployment(self, requests):
+        """Test communicate_deployment works."""
+        repo = deployment_status['repository']['full_name']
+        repo_url = deployment_status['repository']['url']
+        status = deployment_status['deployment_status']['state']
+        status_url = deployment_status['deployment']['url']
+        user = deployment_status['deployment']['payload']['deploy_user']
+        msg ='Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
+                                                                 repo,
+                                                                 user,
+                                                                 status_url,
+                                                                 status)
+        requests.post.return_value = PseudoRequest(msg, 200, '')
+        res = communicate_deployment(deployment_status)
+        assert msg in res, res

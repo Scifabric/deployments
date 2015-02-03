@@ -22,11 +22,13 @@ This exports:
     - Test the app
 
 """
+import config
 import json
 from base import Test
 from app import app
 from mock import patch
-from github import pull_request_opened, pull_request_closed
+from github import pull_request_opened, pull_request_closed, \
+    pull_request_closed_merged
 
 
 class TestApp(Test):
@@ -89,3 +91,18 @@ class TestApp(Test):
                            headers=headers)
         assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
         assert "Pull Request created!" in res.data, res.data
+
+    @patch('app.create_deployment')
+    @patch('app.authorize', return_value=True)
+    def test_post_pull_request_closed_merged(self, authorize,
+                                             create_deployment):
+        """Test POST method with pull request closed and merged event."""
+        self.github_headers['X-GitHub-Event'] = 'pull_request'
+        headers = self.github_headers.copy()
+        headers.update(self.json_headers)
+        res = self.tc.post('/', data=json.dumps(pull_request_closed_merged),
+                           headers=headers)
+        assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
+        assert "Pull Request merged!" in res.data, res.data
+        data = pull_request_closed_merged['pull_request']
+        assert create_deployment.called_with(data, config.TOKEN)

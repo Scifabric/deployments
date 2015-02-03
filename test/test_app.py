@@ -53,3 +53,8 @@ class TestApp(Test):
         res = self.tc.post('/')
         assert res.status_code == 403, self.ERR_MSG_403_STATUS_CODE
 
+    @patch('app.authorize', return_value=True)
+    def test_post_501_wrong_headers(self, authorize):
+        """Test POST method with wrong header returns 501 for auth."""
+        res = self.tc.post('/')
+        assert res.status_code == 501, self.ERR_MSG_501_STATUS_CODE

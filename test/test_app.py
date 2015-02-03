@@ -134,8 +134,9 @@ class TestApp(Test):
         assert "Update Deployment Status" in res.data, res.data
         assert communicate_deployment.called_with(deployment)
 
+    @patch('app.update_deployment')
     @patch('app.Popen')
-    def test_process_deployment(self, popen):
+    def test_process_deployment(self, popen, update_deployment):
         """Test process_deployment method."""
         process_mock = MagicMock()
         attrs = {'communicate.return_value': ('ouput', 'error'),
@@ -144,3 +145,15 @@ class TestApp(Test):
         popen.return_value = process_mock
         res = process_deployment(deployment, config.TOKEN)
         assert "Deployment done!" in res, res
+        assert update_deployment.called_with(deployment, status='success')
+
+    # @patch('app.Popen')
+    # def test_process_deployment_fails(self, popen):
+    #     """Test process_deployment fails method."""
+    #     process_mock = MagicMock()
+    #     attrs = {'communicate.return_value': ('ouput', 'error'),
+    #              'wait.return_value': 1}
+    #     process_mock.configure_mock(**attrs)
+    #     popen.return_value = process_mock
+    #     res = process_deployment(deployment, config.TOKEN)
+    #     assert "Deployment done!" in res, res

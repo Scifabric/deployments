@@ -119,3 +119,17 @@ class TestApp(Test):
         assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
         assert "Process Deployment" in res.data, res.data
         assert process_deployment.called_with(deployment, config.TOKEN)
+
+    @patch('app.communicate_deployment')
+    @patch('app.authorize', return_value=True)
+    def test_post_communicate_deployment(self, authorize,
+                                         communicate_deployment):
+        """Test POST method with deployment_status event."""
+        self.github_headers['X-GitHub-Event'] = 'deployment_status'
+        headers = self.github_headers.copy()
+        headers.update(self.json_headers)
+        res = self.tc.post('/', data=json.dumps(deployment),
+                           headers=headers)
+        assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
+        assert "Update Deployment Status" in res.data, res.data
+        assert communicate_deployment.called_with(deployment)

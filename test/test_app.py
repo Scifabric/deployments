@@ -27,8 +27,10 @@ import json
 from base import Test
 from app import app, process_deployment
 from mock import patch, MagicMock
+from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
     pull_request_closed_merged, deployment
+from subprocess import CalledProcessError
 
 
 class TestApp(Test):
@@ -117,7 +119,7 @@ class TestApp(Test):
         res = self.tc.post('/', data=json.dumps(deployment),
                            headers=headers)
         assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
-        assert "Process Deployment" in res.data, res.data
+        assert "Deployment done!" in res.data, res.data
         assert process_deployment.called_with(deployment, config.TOKEN)
 
     @patch('app.communicate_deployment')
@@ -144,16 +146,17 @@ class TestApp(Test):
         process_mock.configure_mock(**attrs)
         popen.return_value = process_mock
         res = process_deployment(deployment, config.TOKEN)
-        assert "Deployment done!" in res, res
+        assert res, res
         assert update_deployment.called_with(deployment, status='success')
 
-    # @patch('app.Popen')
-    # def test_process_deployment_fails(self, popen):
-    #     """Test process_deployment fails method."""
-    #     process_mock = MagicMock()
-    #     attrs = {'communicate.return_value': ('ouput', 'error'),
-    #              'wait.return_value': 1}
-    #     process_mock.configure_mock(**attrs)
-    #     popen.return_value = process_mock
-    #     res = process_deployment(deployment, config.TOKEN)
-    #     assert "Deployment done!" in res, res
+    @patch('app.update_deployment')
+    @patch('app.Popen')
+    def test_process_deployment_fails(self, popen, update_deployment):
+        """Test process_deployment fails method."""
+        process_mock = MagicMock()
+        attrs = {'communicate.return_value': ('ouput', 'error'),
+                 'wait.return_value': 1}
+        process_mock.configure_mock(**attrs)
+        popen.return_value = process_mock
+        assert_raises(CalledProcessError, process_deployment,
+                      deployment, config.TOKEN)

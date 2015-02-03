@@ -237,3 +237,20 @@ class TestApp(Test):
         requests.post.return_value = PseudoRequest(msg, 200, '')
         res = communicate_deployment(deployment_status)
         assert msg in res, res
+
+    @patch('app.requests')
+    def test_communicate_deployment_fails(self, requests):
+        """Test communicate_deployment works."""
+        repo = deployment_status['repository']['full_name']
+        repo_url = deployment_status['repository']['url']
+        status = deployment_status['deployment_status']['state']
+        status_url = deployment_status['deployment']['url']
+        user = deployment_status['deployment']['payload']['deploy_user']
+        msg ='Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
+                                                                 repo,
+                                                                 user,
+                                                                 status_url,
+                                                                 status)
+        requests.post.side_effect = AttributeError
+        res = communicate_deployment(deployment_status)
+        assert msg in res, res

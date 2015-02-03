@@ -134,14 +134,12 @@ def communicate_deployment(deployment):
                                                                  status)
     text = {'text': msg}
     headers = {'Content-type': 'application/json'}
-    if config.SLACK_WEBHOOK:
+    try:
         r = requests.post(config.SLACK_WEBHOOK,
                           data=json.dumps(text), headers=headers)
         return r.text
-    else:
+    except AttributeError:
         return msg
-
-
 
 
 # See http://stackoverflow.com/questions/18168819/how-to-securely-verify-an-hmac-in-python-2-7

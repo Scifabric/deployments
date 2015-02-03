@@ -15,6 +15,9 @@ following individual elements:
 NOTE: it's important to add a secret to protect your deployments. Don't use
 something easy.
 
+NOTE2: you'll need a Github OAuth token. Create one from your settings page,
+and give it only deployments permissions.
+
 Copy the config.py.template and rename to config.py. Add your own values.
 
 ## Customizing the commands

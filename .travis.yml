@@ -1,0 +1,9 @@
+language: python
+python:
+  - "2.7"
+before_install:
+  - pip install coveralls --use-mirrors
+  - cp config.py.template config.py
+script: nosetests test
+after_success:
+  - coveralls

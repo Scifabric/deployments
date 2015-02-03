@@ -28,7 +28,7 @@ from base import Test
 from app import app
 from mock import patch
 from github import pull_request_opened, pull_request_closed, \
-    pull_request_closed_merged
+    pull_request_closed_merged, deployment
 
 
 class TestApp(Test):
@@ -106,3 +106,16 @@ class TestApp(Test):
         assert "Pull Request merged!" in res.data, res.data
         data = pull_request_closed_merged['pull_request']
         assert create_deployment.called_with(data, config.TOKEN)
+
+    @patch('app.process_deployment')
+    @patch('app.authorize', return_value=True)
+    def test_post_deployment(self, authorize, process_deployment):
+        """Test POST method with deployment event."""
+        self.github_headers['X-GitHub-Event'] = 'deployment'
+        headers = self.github_headers.copy()
+        headers.update(self.json_headers)
+        res = self.tc.post('/', data=json.dumps(deployment),
+                           headers=headers)
+        assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
+        assert "Process Deployment" in res.data, res.data
+        assert process_deployment.called_with(deployment, config.TOKEN)

@@ -193,3 +193,5 @@ class TestApp(Test):
         e = OSError()
         assert update_deployment.called_with(deployment, status='error',
                                              message=str(e))
+
+

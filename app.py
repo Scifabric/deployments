@@ -68,9 +68,8 @@ def process_deployment(deployment, token):
                                                  output=p.communicate())
                 update_deployment(deployment, status='success')
                 return True
-        update_deployment(deployment, status='error')
+        # update_deployment(deployment, status='error')
     except CalledProcessError as e:
-        print "HOLA"
         message = "command: %s ERROR: %s" % (e.cmd, e.output[1])
         update_deployment(deployment, status='error', message=message)
         return False

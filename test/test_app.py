@@ -48,3 +48,8 @@ class TestApp(Test):
         res = self.tc.get('/')
         assert res.status_code == 501, self.ERR_MSG_501_STATUS_CODE
 
+    def test_post_403(self):
+        """Test POST method return 403 for non auth."""
+        res = self.tc.post('/')
+        assert res.status_code == 403, self.ERR_MSG_403_STATUS_CODE
+

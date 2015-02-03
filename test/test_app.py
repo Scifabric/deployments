@@ -54,7 +54,15 @@ class TestApp(Test):
         assert res.status_code == 403, self.ERR_MSG_403_STATUS_CODE
 
     @patch('app.authorize', return_value=True)
-    def test_post_501_wrong_headers(self, authorize):
-        """Test POST method with wrong header returns 501 for auth."""
+    def test_post_501_missing_headers(self, authorize):
+        """Test POST method with missing header returns 501 for auth."""
         res = self.tc.post('/')
         assert res.status_code == 501, self.ERR_MSG_501_STATUS_CODE
+
+    @patch('app.authorize', return_value=True)
+    def test_post_501_wrong_headers_alt(self, authorize):
+        """Test POST method with wrong header returns 501 for auth."""
+        self.github_headers['X-GitHub-Event'] = 'wrong'
+        res = self.tc.post('/', headers=self.github_headers)
+        assert res.status_code == 501, self.ERR_MSG_501_STATUS_CODE
+        assert 1 == 0

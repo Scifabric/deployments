@@ -44,6 +44,9 @@ class Test(object):
     ERR_MSG_500_STATUS_CODE = 'Status code should be 500'
     ERR_MSG_501_STATUS_CODE = 'Status code should be 501'
 
+    json_headers = {'Content-type': 'application/json'}
+    github_headers = {'X-GitHub-Event': 'pull_request'}
+
     def setUp(self):
         """Setup method for configuring the tests."""
         self.app = app

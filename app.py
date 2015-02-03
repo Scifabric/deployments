@@ -143,7 +143,7 @@ def communicate_deployment(deployment):
 
 
 # See http://stackoverflow.com/questions/18168819/how-to-securely-verify-an-hmac-in-python-2-7
-def compare_digest(x, y):
+def compare_digest(x, y): # pragma: no cover
     """Compare to hmac digests."""
     if not (isinstance(x, bytes) and isinstance(y, bytes)):
         raise TypeError("both inputs should be instances of bytes")
@@ -159,11 +159,16 @@ def authorize(request, config):
     x_hub_signature = request.headers.get('X-Hub-Signature')
     if x_hub_signature is None:
         return False
-    sha_name, signature = x_hub_signature.split('=')
-    if signature is None:
+    try:
+        sha_name, signature = x_hub_signature.split('=')
+    except ValueError:
+        return False
+    if signature is None or signature == "":
        return False
+    if sha_name != 'sha1':
+        return False
     mac = hmac.new(config.SECRET, msg=request.data, digestmod=hashlib.sha1)
-    if sha_name == 'sha1' and compare_digest(mac.hexdigest(), bytes(signature)):
+    if compare_digest(mac.hexdigest(), bytes(signature)):
         return True
     else:
         return False

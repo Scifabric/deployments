@@ -26,7 +26,7 @@ import config
 import json
 from base import Test, PseudoRequest
 from app import app, process_deployment, create_deployment, update_deployment, \
-    communicate_deployment
+    communicate_deployment, authorize
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
@@ -254,3 +254,27 @@ class TestApp(Test):
         requests.post.side_effect = AttributeError
         res = communicate_deployment(deployment_status)
         assert msg in res, res
+
+    def test_authorize_case_1(self):
+        """Test authorize without signature."""
+        request = MagicMock()
+        request.headers = {'Something': 'bar'}
+        assert authorize(request, config) is False
+
+    def test_authorize_case_2(self):
+        """Test authorize wit signature but wrong one."""
+        request = MagicMock()
+        request.headers = {'X-Hub-Signature': ''}
+        assert authorize(request, config) is False
+
+    def test_authorize_case_3(self):
+        """Test authorize wit signature but wrong one."""
+        request = MagicMock()
+        request.headers = {'X-Hub-Signature': 'sha1='}
+        assert authorize(request, config) is False
+
+    def test_authorize_case_4(self):
+        """Test authorize wit signature but wrong one."""
+        request = MagicMock()
+        request.headers = {'X-Hub-Signature': 'md5=signature'}
+        assert authorize(request, config) is False

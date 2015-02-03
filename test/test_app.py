@@ -122,6 +122,20 @@ class TestApp(Test):
         assert "Deployment done!" in res.data, res.data
         assert process_deployment.called_with(deployment, config.TOKEN)
 
+
+    @patch('app.process_deployment', return_value=False)
+    @patch('app.authorize', return_value=True)
+    def test_post_deployment_fails(self, authorize, process_deployment):
+        """Test POST method with deployment event fails."""
+        self.github_headers['X-GitHub-Event'] = 'deployment'
+        headers = self.github_headers.copy()
+        headers.update(self.json_headers)
+        res = self.tc.post('/', data=json.dumps(deployment),
+                           headers=headers)
+        assert res.status_code == 500, self.ERR_MSG_500_STATUS_CODE
+        assert process_deployment.called_with(deployment, config.TOKEN)
+
+
     @patch('app.communicate_deployment')
     @patch('app.authorize', return_value=True)
     def test_post_communicate_deployment(self, authorize,

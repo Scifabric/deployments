@@ -1,4 +1,4 @@
-# Simple web server to do automatic deployments.
+## Simple web server to do automatic deployments.
 [![Build Status](https://travis-ci.org/PyBossa/deployments.svg)](https://travis-ci.org/PyBossa/deployments)
 
 This is a very simple web server that can be used to automate your deployments

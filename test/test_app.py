@@ -24,8 +24,8 @@ This exports:
 """
 import config
 import json
-from base import Test
-from app import app, process_deployment, create_deployment
+from base import Test, PseudoRequest
+from app import app, process_deployment, create_deployment, update_deployment
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
@@ -201,3 +201,21 @@ class TestApp(Test):
         requests.post.return_value = deployment
         res = create_deployment(data, config.TOKEN)
         assert res == deployment, res
+
+    @patch('app.requests')
+    def test_update_deployment(self, requests):
+        """Test create_deployment works."""
+        requests.post.return_value = PseudoRequest(json.dumps(deployment),
+                                                   200,
+                                                   self.json_headers)
+        res = update_deployment(deployment, 'success')
+        assert res, res
+
+    @patch('app.requests')
+    def test_update_deployment_fails(self, requests):
+        """Test create_deployment fails."""
+        requests.post.return_value = PseudoRequest(json.dumps(deployment),
+                                                   404,
+                                                   self.json_headers)
+        res = update_deployment(deployment, 'success')
+        assert res is False, res

@@ -23,9 +23,9 @@ This exports:
 
 """
 from app import app
-
-# PseudoRequest = namedtuple('PseudoRequest',
-#                            ['text', 'status_code', 'headers'])
+from collections import namedtuple
+PseudoRequest = namedtuple('PseudoRequest',
+                           ['text', 'status_code', 'headers'])
 
 
 class Test(object):

@@ -54,7 +54,6 @@ def event_handler():
 def process_deployment(deployment, token):
     """Process deployment."""
     try:
-        print deployment['repository']['full_name']
         for repo in config.REPOS:
             if repo['repo'] == deployment['repository']['full_name']:
                 update_deployment(deployment, status='pending')
@@ -92,7 +91,7 @@ def create_deployment(pull_request, token):
             'description': 'mydesc'}
     deployment = requests.post(url, data=json.dumps(data), headers=headers,
                                auth=auth)
-    print deployment
+    # print deployment
     return deployment
 
 
@@ -101,7 +100,7 @@ def update_deployment(deployment, status, message="ERROR"):
     token = config.TOKEN
     repo = deployment['repository']['full_name']
     url = 'https://api.github.com/repos/%s/deployments/%s/statuses' % (repo, deployment['deployment']['id'])
-    print url
+    # print url
     headers = {'Content-type': 'application/json'}
     auth = (token, '')
     if status == 'success':
@@ -112,7 +111,7 @@ def update_deployment(deployment, status, message="ERROR"):
             'target_url': 'http://example.com',
             'description': msg}
     r = requests.post(url, data=json.dumps(data), headers=headers, auth=auth)
-    print r.text
+    # print r.text
 
 
 def communicate_deployment(deployment):

@@ -1,5 +1,9 @@
 ## Simple web server to do automatic deployments.
-[![Build Status](https://travis-ci.org/PyBossa/deployments.svg)](https://travis-ci.org/PyBossa/deployments)
+[![Build
+Status](https://travis-ci.org/PyBossa/deployments.svg)](https://travis-ci.org/PyBossa/deployments)
+[![Coverage
+Status](https://coveralls.io/repos/PyBossa/deployments/badge.svg)](https://coveralls.io/r/PyBossa/deployments)
+[![Code Health](https://landscape.io/github/PyBossa/deployments/master/landscape.svg?style=flat)](https://landscape.io/github/PyBossa/deployments/master)
 
 This is a very simple web server that can be used to automate your deployments
 from Github repositories.

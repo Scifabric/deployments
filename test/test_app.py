@@ -25,8 +25,8 @@ This exports:
 import config
 import json
 from base import Test
-from app import app
-from mock import patch
+from app import app, process_deployment
+from mock import patch, MagicMock
 from github import pull_request_opened, pull_request_closed, \
     pull_request_closed_merged, deployment
 
@@ -133,3 +133,14 @@ class TestApp(Test):
         assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
         assert "Update Deployment Status" in res.data, res.data
         assert communicate_deployment.called_with(deployment)
+
+    @patch('app.Popen')
+    def test_process_deployment(self, popen):
+        """Test process_deployment method."""
+        process_mock = MagicMock()
+        attrs = {'communicate.return_value': ('ouput', 'error'),
+                 'wait.return_value': 0}
+        process_mock.configure_mock(**attrs)
+        popen.return_value = process_mock
+        res = process_deployment(deployment, config.TOKEN)
+        assert "Deployment done!" in res, res

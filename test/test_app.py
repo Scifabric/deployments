@@ -22,9 +22,11 @@ This exports:
     - Test the app
 
 """
+import json
 from base import Test
 from app import app
 from mock import patch
+from github import pull_request_opened, pull_request_closed
 
 
 class TestApp(Test):
@@ -65,4 +67,14 @@ class TestApp(Test):
         self.github_headers['X-GitHub-Event'] = 'wrong'
         res = self.tc.post('/', headers=self.github_headers)
         assert res.status_code == 501, self.ERR_MSG_501_STATUS_CODE
-        assert 1 == 0
+
+    @patch('app.authorize', return_value=True)
+    def test_post_pull_request_event(self, authorize):
+        """Test POST method with pull request event."""
+        self.github_headers['X-GitHub-Event'] = 'pull_request'
+        headers = self.github_headers.copy()
+        headers.update(self.json_headers)
+        res = self.tc.post('/', data=json.dumps(pull_request_opened),
+                           headers=headers)
+        assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
+        assert "Pull Request created!" in res.data, res.data

@@ -78,7 +78,7 @@ def process_deployment(deployment):
             if repo['repo'] == deployment['repository']['full_name']:
                 update_deployment(deployment, status='pending')
                 # ansible_hosts and Playbook defined? Then run only Ansible.
-                if repo['ansible_hosts'] and repo['ansible_playbook']:
+                if 'ansible_hosts' in repo and 'ansible_playbook' in repo:
                     try:
                         run_ansible_playbook(repo['ansible_hosts'], repo['ansible_playbook'])
                         update_deployment(deployment, status='success')

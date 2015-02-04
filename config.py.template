@@ -1,12 +1,12 @@
 DEBUG = False
 SECRET = 'yoursecret'
+TOKEN = 'your-github-token'
+SLACK_WEBHOOK = 'yourslackwebhook'
 REPOS = [{'repo': 'user/repo',
-            ansible_hosts: 'ansible_hosts',
-            ansible_playbook: 'playbook.yml'
-#          'folder': '/your/repo',
-#          'commands': [
-#              ['git', 'fetch'],
-#              ['git', 'pull', 'origin', 'master']
-#             ]
-           }
-          ]
+         'folder': '/your/repo',
+         'commands': [
+             ['git', 'fetch'],
+             ['git', 'pull', 'origin', 'master']
+            ]
+          }
+         ]

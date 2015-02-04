@@ -1,0 +1,7 @@
+DEBUG = False
+SECRET = 'yoursecret'
+REPOS = [{'repo': 'user/repo',
+            ansible_hosts: 'ansible_hosts',
+            ansible_playbook: 'playbook.yml'
+           }
+          ]

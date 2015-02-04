@@ -1,4 +1,9 @@
-# Simple web server to do automatic deployments.
+## Simple web server to do automatic deployments.
+[![Build
+Status](https://travis-ci.org/PyBossa/deployments.svg)](https://travis-ci.org/PyBossa/deployments)
+[![Coverage
+Status](https://coveralls.io/repos/PyBossa/deployments/badge.svg)](https://coveralls.io/r/PyBossa/deployments)
+[![Code Health](https://landscape.io/github/PyBossa/deployments/master/landscape.svg?style=flat)](https://landscape.io/github/PyBossa/deployments/master)
 
 This is a very simple web server that can be used to automate your deployments
 from Github repositories.
@@ -14,6 +19,9 @@ following individual elements:
 
 NOTE: it's important to add a secret to protect your deployments. Don't use
 something easy.
+
+NOTE2: you'll need a Github OAuth token. Create one from your settings page,
+and give it only deployments permissions.
 
 Copy the config.py.template and rename to config.py. Add your own values.
 

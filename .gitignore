@@ -2,3 +2,5 @@ config.py
 *.swp
 *.un~
 *.pyc
+.coverage
+env/

@@ -24,6 +24,7 @@ import requests
 import ansible.playbook
 from ansible import callbacks
 from ansible import utils
+from ansible.errors import AnsibleError
 
 app = Flask(__name__)
 
@@ -79,13 +80,10 @@ def process_deployment(deployment):
                 update_deployment(deployment, status='pending')
                 # ansible_hosts and Playbook defined? Then run only Ansible.
                 if 'ansible_hosts' in repo and 'ansible_playbook' in repo:
-                    try:
-                        run_ansible_playbook(repo['ansible_hosts'], repo['ansible_playbook'])
-                        update_deployment(deployment, status='success')
-                        return True
-                    except Exception as e: # TODO: More granular error handling of 1) failing playbook 2) missing playbook or 3) ansible_hosts
-                        update_deployment(deployment, status='error', message=str(e.message))
-                        return False
+                    run_ansible_playbook(repo['ansible_hosts'],
+                                         repo['ansible_playbook'])
+                    update_deployment(deployment, status='success')
+                    return True
                 else:
                     for command in repo['commands']:
                         p = Popen(command, cwd=repo['folder'], stderr=PIPE)
@@ -96,7 +94,13 @@ def process_deployment(deployment):
                                                      output=p.communicate())
                     update_deployment(deployment, status='success')
                     return True
-        # update_deployment(deployment, status='error')
+    except KeyError as e:
+        message = "ansible playbook or host file is missing in config file."
+        update_deployment(deployment, status='error', message=message)
+        return False
+    except AnsibleError as e:
+        update_deployment(deployment, status='error', message=str(e))
+        return False
     except CalledProcessError as e:
         message = "command: %s ERROR: %s" % (e.cmd, e.output[1])
         update_deployment(deployment, status='error', message=message)
@@ -104,7 +108,6 @@ def process_deployment(deployment):
     except OSError as e:
         update_deployment(deployment, status='error', message=str(e))
         return False
-
 
 
 def create_deployment(pull_request, token):

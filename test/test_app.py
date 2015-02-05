@@ -213,6 +213,21 @@ class TestApp(Test):
             assert update_deployment.called_with(deployment_ansible,
                                                  status='success')
 
+    @patch('app.run_ansible_playbook')
+    @patch('app.update_deployment')
+    def test_process_deployment_ansible_key_error(self, update_deployment,
+                                                  run_ansible_playbook):
+        """Test process_deployment ansible key_error method."""
+        repo = {'repo': 'user/ansible',
+                'nsible_hosts': 'ansible_hosts',
+                'nsible_playbook': 'playbook.yml'}
+
+        with patch('config.REPOS', [repo]):
+            res = process_deployment(deployment_ansible)
+            assert update_deployment.called_with(deployment_ansible,
+                                                 status='error')
+            assert res is False
+
 
     @patch('app.requests')
     def test_create_deployment(self, requests):

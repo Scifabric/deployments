@@ -26,7 +26,7 @@ import config
 import json
 from base import Test, PseudoRequest
 from app import app, process_deployment, create_deployment, update_deployment, \
-    communicate_deployment, authorize
+    communicate_deployment, authorize, run_ansible_playbook
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
@@ -302,3 +302,17 @@ class TestApp(Test):
         request.headers = {'X-Hub-Signature': signature}
         res = authorize(request, config)
         assert res is False, res
+
+    @patch('app.ansible', autospec=True)
+    @patch('app.callbacks', autospec=True)
+    def test_run_ansible_playbook(self, callbacks, ansible):
+        """Test run ansible playbook works."""
+        ansible_hosts = 'ansible_hosts'
+        playbook = 'playbook.yml'
+        run_ansible_playbook(ansible_hosts, playbook)
+        pb = MagicMock()
+        pb.run.return_value = True
+        assert callbacks.AggregateStats.called
+        assert callbacks.PlaybookCallbacks.called
+        assert callbacks.PlaybookRunnerCallbacks.called
+        assert ansible.playbook.PlayBook.called

@@ -223,10 +223,32 @@ class TestApp(Test):
                 'nsible_playbook': 'playbook.yml'}
 
         with patch('config.REPOS', [repo]):
+            run_ansible_playbook.side_effect = KeyError
             res = process_deployment(deployment_ansible)
+            message = "ansible playbook or host file is missing in config file."
             assert update_deployment.called_with(deployment_ansible,
-                                                 status='error')
+                                                 status='error',
+                                                 message=message)
             assert res is False
+
+    @patch('app.run_ansible_playbook')
+    @patch('app.update_deployment')
+    def test_process_deployment_ansible_error(self, update_deployment,
+                                                  run_ansible_playbook):
+        """Test process_deployment ansible error method."""
+        repo = {'repo': 'user/ansible',
+                'ansible_hosts': 'fake_file',
+                'ansible_playbook': 'playbok.yml'}
+
+        with patch('config.REPOS', [repo]):
+            from ansible.errors import AnsibleError
+            run_ansible_playbook.side_effect = AnsibleError('error')
+            res = process_deployment(deployment_ansible)
+            msg = str(AnsibleError('error'))
+            assert update_deployment.called_with(deployment_ansible,
+                                                 status='error',
+                                                 message=msg)
+            assert res is False, res
 
 
     @patch('app.requests')

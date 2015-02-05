@@ -82,6 +82,7 @@ def process_deployment(deployment):
                     try:
                         run_ansible_playbook(repo['ansible_hosts'], repo['ansible_playbook'])
                         update_deployment(deployment, status='success')
+                        return True
                     except Exception as e: # TODO: More granular error handling of 1) failing playbook 2) missing playbook or 3) ansible_hosts
                         update_deployment(deployment, status='error', message=str(e.message))
                         return False

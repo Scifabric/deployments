@@ -30,7 +30,8 @@ from app import app, process_deployment, create_deployment, update_deployment, \
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
-    pull_request_closed_merged, deployment, deployment_status
+    pull_request_closed_merged, deployment, deployment_status, \
+    deployment_ansible
 from subprocess import CalledProcessError
 
 
@@ -194,6 +195,24 @@ class TestApp(Test):
         e = OSError()
         assert update_deployment.called_with(deployment, status='error',
                                              message=str(e))
+
+    @patch('app.run_ansible_playbook')
+    @patch('app.update_deployment')
+    def test_process_deployment_ansible(self, update_deployment,
+                                        run_ansible_playbook):
+        """Test process_deployment ansible method."""
+        repo = {'repo': 'user/ansible',
+                'ansible_hosts': 'ansible_hosts',
+                'ansible_playbook': 'playbook.yml'}
+
+        with patch('config.REPOS', [repo]):
+            res = process_deployment(deployment_ansible)
+            assert res, res
+            assert run_ansible_playbook.called_with(repo['ansible_hosts'],
+                                                    repo['ansible_playbook'])
+            assert update_deployment.called_with(deployment_ansible,
+                                                 status='success')
+
 
     @patch('app.requests')
     def test_create_deployment(self, requests):

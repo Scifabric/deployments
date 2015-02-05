@@ -56,18 +56,18 @@ def event_handler():
 def process_deployment(deployment):
     """Process deployment."""
     try:
-        for repo in config.REPOS:
-            if repo['repo'] == deployment['repository']['full_name']:
-                update_deployment(deployment, status='pending')
-                for command in repo['commands']:
-                    p = Popen(command, cwd=repo['folder'], stderr=PIPE)
-                    return_code = p.wait()
-                    if return_code != 0:
-                        raise CalledProcessError(return_code,
-                                                 command,
-                                                 output=p.communicate())
-                update_deployment(deployment, status='success')
-                return True
+        repo = config.REPOS.get(deployment['repository']['full_name'])
+        if repo:
+            update_deployment(deployment, status='pending')
+            for command in repo['commands']:
+                p = Popen(command, cwd=repo['folder'], stderr=PIPE)
+                return_code = p.wait()
+                if return_code != 0:
+                    raise CalledProcessError(return_code,
+                                             command,
+                                             output=p.communicate())
+            update_deployment(deployment, status='success')
+            return True
         # update_deployment(deployment, status='error')
     except CalledProcessError as e:
         message = "command: %s ERROR: %s" % (e.cmd, e.output[1])
@@ -81,16 +81,19 @@ def process_deployment(deployment):
 
 def create_deployment(pull_request, token):
     """Create a deployment."""
+    repo = config.REPOS.get(pull_request['head']['repo']['full_name'])
     user = pull_request['user']['login']
     # owner = pull_request['head']['repo']['owner']['login']
-    repo = pull_request['head']['repo']['full_name']
+    repo_name = pull_request['head']['repo']['full_name']
     payload = {'environment': 'production', 'deploy_user': user}
-    url = 'https://api.github.com/repos/%s/deployments' % (repo)
+    url = 'https://api.github.com/repos/%s/deployments' % (repo_name)
     headers = {'Content-type': 'application/json'}
     auth = (token, '')
     data = {'ref': pull_request['head']['ref'],
             'payload': payload,
             'description': 'mydesc'}
+    if repo.get('required_contexts'):
+        data['required_contexts'] = repo.get('required_contexts')
     deployment = requests.post(url, data=json.dumps(data), headers=headers,
                                auth=auth)
     # print deployment

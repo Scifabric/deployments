@@ -204,6 +204,19 @@ class TestApp(Test):
         assert res == deployment, res
 
     @patch('app.requests')
+    def test_create_deployment_with_context(self, requests):
+        """Test create_deployment with context works."""
+        repo = {'user/repo': {'folder': '/repo',
+                              'required_contexts': ['ci/travis'],
+                              'commands': [['ls']]}}
+        with patch('config.REPOS', repo):
+            data = pull_request_closed_merged['pull_request']
+            requests.post.return_value = deployment
+            res = create_deployment(data, config.TOKEN)
+            assert res == deployment, res
+
+
+    @patch('app.requests')
     def test_update_deployment(self, requests):
         """Test create_deployment works."""
         requests.post.return_value = PseudoRequest(json.dumps(deployment),
@@ -302,3 +315,4 @@ class TestApp(Test):
         request.headers = {'X-Hub-Signature': signature}
         res = authorize(request, config)
         assert res is False, res
+

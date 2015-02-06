@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with Deployments.  If not, see <http://www.gnu.org/licenses/>.
-from flask import Flask, request, abort
+from flask import Flask, request, abort, Response, url_for
 from subprocess import Popen, PIPE, CalledProcessError
 import config
 import hmac
@@ -27,6 +27,26 @@ from ansible import utils
 from ansible.errors import AnsibleError
 
 app = Flask(__name__)
+
+@app.route("/getstatus")
+def get_status():
+    """Get status."""
+    url = request.args.get('url')
+    if url:
+       token = config.TOKEN
+       headers = {'Content-type': 'application/json'}
+       auth = (token, '')
+       output = requests.get(url, headers=headers, auth=auth)
+       if output.status_code == 200:
+           resp = Response(response=json.dumps(output.json()),
+                    status=200,
+                    mimetype="application/json")
+           return resp
+       else:
+           return abort(404)
+    else:
+        return abort(404)
+
 
 @app.route("/", methods=['GET', 'POST'])
 def event_handler():
@@ -157,7 +177,8 @@ def communicate_deployment(deployment):
     repo = deployment['repository']['full_name']
     repo_url = deployment['repository']['url']
     status = deployment['deployment_status']['state']
-    status_url = deployment['deployment']['url']
+    status_url = url_for('.get_status', url=deployment['deployment']['url'],
+                         _external=True)
     user = deployment['deployment']['payload']['deploy_user']
     msg ='Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
                                                                  repo,

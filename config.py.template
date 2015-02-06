@@ -2,11 +2,9 @@ DEBUG = False
 SECRET = 'yoursecret'
 TOKEN = 'your-github-token'
 SLACK_WEBHOOK = 'yourslackwebhook'
-REPOS = [{'repo': 'user/repo',
-         'folder': '/your/repo',
-         'commands': [
-             ['git', 'fetch'],
-             ['git', 'pull', 'origin', 'master']
-            ]
-          }
-         ]
+REPOS = {
+    'user/repo': {'folder': '/repo',
+                  'required_contexts': ["continuous-integration/travis-ci"],
+                  'commands': [['git', 'fetch'],
+                               ['git', 'pull', 'origin', 'master']]}
+}

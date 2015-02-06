@@ -110,6 +110,7 @@ def process_deployment(deployment):
         return False
 
 
+
 def create_deployment(pull_request, token):
     """Create a deployment."""
     user = pull_request['user']['login']

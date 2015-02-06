@@ -412,7 +412,16 @@ class TestApp(Test):
         pb.run.assert_called_with()
 
     @patch('app.requests')
+    def test_get_status_non_url(self, requests):
+        """Test get_status non URL works."""
+        res = self.tc.get('/getstatus')
+        assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE
+
+    @patch('app.requests')
     def test_get_status(self, requests):
         """Test get_status works."""
         res = self.tc.get('/getstatus')
+        requests.get.return_value = PseudoRequest(json.dumps(deployment),
+                                                   404,
+                                                   self.json_headers)
         assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE

@@ -33,6 +33,7 @@ from github import pull_request_opened, pull_request_closed, \
     pull_request_closed_merged, deployment, deployment_status, \
     deployment_ansible
 from subprocess import CalledProcessError
+from urllib import quote
 
 
 class TestApp(Test):
@@ -304,8 +305,9 @@ class TestApp(Test):
                                                                  status_url,
                                                                  status)
         requests.post.return_value = PseudoRequest(msg, 200, '')
-        res = communicate_deployment(deployment_status)
-        assert msg in res, res
+        with self.app.test_request_context():
+            res = communicate_deployment(deployment_status)
+            assert msg in res, res
 
     @patch('app.requests')
     def test_communicate_deployment_fails(self, requests):
@@ -313,16 +315,18 @@ class TestApp(Test):
         repo = deployment_status['repository']['full_name']
         repo_url = deployment_status['repository']['url']
         status = deployment_status['deployment_status']['state']
-        status_url = deployment_status['deployment']['url']
+        status_url = 'http://localhost/getstatus?url=' + quote(deployment_status['deployment']['url'], '')
         user = deployment_status['deployment']['payload']['deploy_user']
         msg ='Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
                                                                  repo,
                                                                  user,
                                                                  status_url,
                                                                  status)
+        print msg
         requests.post.side_effect = AttributeError
-        res = communicate_deployment(deployment_status)
-        assert msg in res, res
+        with self.app.test_request_context():
+            res = communicate_deployment(deployment_status)
+            assert msg in res, res
 
     def test_authorize_case_1(self):
         """Test authorize without signature."""

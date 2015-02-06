@@ -365,10 +365,27 @@ class TestApp(Test):
         """Test run ansible playbook works."""
         ansible_hosts = 'ansible_hosts'
         playbook = 'playbook.yml'
-        run_ansible_playbook(ansible_hosts, playbook)
+
+        stats = MagicMock()
+        callbacks.AggregateStats.return_value = stats
+        playbook_cb = MagicMock()
+        callbacks.PlaybookCallbacks.return_value = playbook_cb
+        inventory = MagicMock()
+        ansible.inventory.Inventory.return_value = inventory
+        runner_cb = MagicMock()
+        callbacks.PlaybookRunnerCallbacks.return_value = runner_cb
         pb = MagicMock()
-        pb.run.return_value = True
-        assert callbacks.AggregateStats.called
-        assert callbacks.PlaybookCallbacks.called
-        assert callbacks.PlaybookRunnerCallbacks.called
-        assert ansible.playbook.PlayBook.called
+        ansible.playbook.PlayBook.return_value = pb
+
+        run_ansible_playbook(ansible_hosts, playbook)
+
+        callbacks.AggregateStats.assert_called_with()
+        callbacks.PlaybookCallbacks.assert_called_with(verbose=0)
+        ansible.inventory.Inventory.assert_called_with(ansible_hosts)
+        callbacks.PlaybookRunnerCallbacks.assert_called_with(stats, verbose=0)
+        ansible.playbook.PlayBook.assert_called_with(playbook=playbook,
+                                                     callbacks=playbook_cb,
+                                                     runner_callbacks=runner_cb,
+                                                     stats=stats,
+                                                     inventory=inventory)
+        pb.run.assert_called_with()

@@ -201,15 +201,15 @@ class TestApp(Test):
     def test_process_deployment_ansible(self, update_deployment,
                                         run_ansible_playbook):
         """Test process_deployment ansible method."""
-        repo = {'repo': 'user/ansible',
-                'ansible_hosts': 'ansible_hosts',
-                'ansible_playbook': 'playbook.yml'}
+        repo = {'user/ansible': {
+                    'ansible_hosts': 'ansible_hosts',
+                    'ansible_playbook': 'playbook.yml'}}
 
-        with patch('config.REPOS', [repo]):
+        with patch('config.REPOS', repo):
             res = process_deployment(deployment_ansible)
             assert res, res
-            assert run_ansible_playbook.called_with(repo['ansible_hosts'],
-                                                    repo['ansible_playbook'])
+            assert run_ansible_playbook.called_with(repo['user/ansible']['ansible_hosts'],
+                                                    repo['user/ansible']['ansible_playbook'])
             assert update_deployment.called_with(deployment_ansible,
                                                  status='success')
 
@@ -218,11 +218,11 @@ class TestApp(Test):
     def test_process_deployment_ansible_key_error(self, update_deployment,
                                                   run_ansible_playbook):
         """Test process_deployment ansible key_error method."""
-        repo = {'repo': 'user/ansible',
-                'nsible_hosts': 'ansible_hosts',
-                'nsible_playbook': 'playbook.yml'}
+        repo = {'user/ansible': {
+                    'nsible_hosts': 'ansible_hosts',
+                    'nsible_playbook': 'playbook.yml'}}
 
-        with patch('config.REPOS', [repo]):
+        with patch('config.REPOS', repo):
             run_ansible_playbook.side_effect = KeyError
             res = process_deployment(deployment_ansible)
             message = "ansible playbook or host file is missing in config file."
@@ -236,11 +236,11 @@ class TestApp(Test):
     def test_process_deployment_ansible_error(self, update_deployment,
                                                   run_ansible_playbook):
         """Test process_deployment ansible error method."""
-        repo = {'repo': 'user/ansible',
-                'ansible_hosts': 'fake_file',
-                'ansible_playbook': 'playbok.yml'}
+        repo = {'user/ansible': {
+                    'ansible_hosts': 'wrong',
+                    'ansible_playbook': 'playook.yml'}}
 
-        with patch('config.REPOS', [repo]):
+        with patch('config.REPOS', repo):
             from ansible.errors import AnsibleError
             run_ansible_playbook.side_effect = AnsibleError('error')
             res = process_deployment(deployment_ansible)

@@ -75,25 +75,25 @@ def run_ansible_playbook(ansible_hosts, playbook):
 def process_deployment(deployment):
     """Process deployment."""
     try:
-        for repo in config.REPOS:
-            if repo['repo'] == deployment['repository']['full_name']:
-                update_deployment(deployment, status='pending')
-                # ansible_hosts and Playbook defined? Then run only Ansible.
-                if 'ansible_hosts' in repo and 'ansible_playbook' in repo:
-                    run_ansible_playbook(repo['ansible_hosts'],
-                                         repo['ansible_playbook'])
-                    update_deployment(deployment, status='success')
-                    return True
-                else:
-                    for command in repo['commands']:
-                        p = Popen(command, cwd=repo['folder'], stderr=PIPE)
-                        return_code = p.wait()
-                        if return_code != 0:
-                            raise CalledProcessError(return_code,
-                                                     command,
-                                                     output=p.communicate())
-                    update_deployment(deployment, status='success')
-                    return True
+        repo = config.REPOS.get(deployment['repository']['full_name'])
+        if repo:
+            update_deployment(deployment, status='pending')
+            # ansible_hosts and Playbook defined? Then run only Ansible.
+            if 'ansible_hosts' in repo and 'ansible_playbook' in repo:
+                run_ansible_playbook(repo['ansible_hosts'],
+                                     repo['ansible_playbook'])
+                update_deployment(deployment, status='success')
+                return True
+            else:
+                for command in repo['commands']:
+                    p = Popen(command, cwd=repo['folder'], stderr=PIPE)
+                    return_code = p.wait()
+                    if return_code != 0:
+                        raise CalledProcessError(return_code,
+                                                 command,
+                                                 output=p.communicate())
+                update_deployment(deployment, status='success')
+                return True
     except KeyError as e:
         message = "ansible playbook or host file is missing in config file."
         update_deployment(deployment, status='error', message=message)

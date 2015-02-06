@@ -372,38 +372,37 @@ class TestApp(Test):
         res = authorize(request, config)
         assert res is False, res
 
-        @patch('app.ansible', autospec=True)
-        @patch('app.callbacks', autospec=True)
-        def test_run_ansible_playbook(self, callbacks, ansible):
-            """Test run ansible playbook works."""
-            ansible_hosts = 'ansible_hosts'
-            playbook = 'playbook.yml'
+    @patch('app.ansible', autospec=True)
+    @patch('app.callbacks', autospec=True)
+    def test_run_ansible_playbook(self, callbacks, ansible):
+        """Test run ansible playbook works."""
+        ansible_hosts = 'ansible_hosts'
+        playbook = 'playbook.yml'
 
-            stats = MagicMock()
-            callbacks.AggregateStats.return_value = stats
+        stats = MagicMock()
+        callbacks.AggregateStats.return_value = stats
 
-            playbook_cb = MagicMock()
-            callbacks.PlaybookCallbacks.return_value = playbook_cb
+        playbook_cb = MagicMock()
+        callbacks.PlaybookCallbacks.return_value = playbook_cb
 
-            inventory = MagicMock()
-            ansible.inventory.Inventory.return_value = inventory
+        inventory = MagicMock()
+        ansible.inventory.Inventory.return_value = inventory
 
-            runner_cb = MagicMock()
-            callbacks.PlaybookRunnerCallbacks.return_value = runner_cb
+        runner_cb = MagicMock()
+        callbacks.PlaybookRunnerCallbacks.return_value = runner_cb
 
-            pb = MagicMock()
-            ansible.playbook.PlayBook.return_value = pb
+        pb = MagicMock()
+        ansible.playbook.PlayBook.return_value = pb
 
-            run_ansible_playbook(ansible_hosts, playbook)
+        run_ansible_playbook(ansible_hosts, playbook)
 
-            callbacks.AggregateStats.assert_called_with()
-            callbacks.PlaybookCallbacks.assert_called_with(verbose=0)
-            ansible.inventory.Inventory.assert_called_with(ansible_hosts)
-            callbacks.PlaybookRunnerCallbacks.assert_called_with(stats, verbose=0)
-            ansible.playbook.PlayBook.assert_called_with(playbook=playbook,
-                                                         callbacks=playbook_cb,
-                                                         runner_callbacks=runner_cb,
-                                                         stats=stats,
-                                                         inventory=inventory)
-            pb.run.assert_called_with()
-            assert 1 == 0
+        callbacks.AggregateStats.assert_called_with()
+        callbacks.PlaybookCallbacks.assert_called_with(verbose=0)
+        ansible.inventory.Inventory.assert_called_with(ansible_hosts)
+        callbacks.PlaybookRunnerCallbacks.assert_called_with(stats, verbose=0)
+        ansible.playbook.PlayBook.assert_called_with(playbook=playbook,
+                                                     callbacks=playbook_cb,
+                                                     runner_callbacks=runner_cb,
+                                                     stats=stats,
+                                                     inventory=inventory)
+        pb.run.assert_called_with()

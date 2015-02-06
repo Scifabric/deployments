@@ -21,6 +21,10 @@ import hmac
 import hashlib
 import json
 import requests
+import ansible.playbook
+from ansible import callbacks
+from ansible import utils
+from ansible.errors import AnsibleError
 
 app = Flask(__name__)
 
@@ -52,6 +56,21 @@ def event_handler():
     else:
         return abort(403)
 
+def run_ansible_playbook(ansible_hosts, playbook):
+    """
+    Run Ansible like ansible-playbook command. Similar to:
+    ansible-playbook -i ansible_hosts playbook.yml
+    """
+    stats = callbacks.AggregateStats()
+    playbook_cb = callbacks.PlaybookCallbacks(verbose=utils.VERBOSITY)
+    inventory = ansible.inventory.Inventory(ansible_hosts)
+    runner_cb = callbacks.PlaybookRunnerCallbacks(stats,
+                                                  verbose=utils.VERBOSITY)
+    pb = ansible.playbook.PlayBook(playbook=playbook,
+                                   callbacks=playbook_cb,
+                                   runner_callbacks=runner_cb,
+                                   stats=stats, inventory=inventory)
+    pb.run()
 
 def process_deployment(deployment):
     """Process deployment."""
@@ -59,16 +78,29 @@ def process_deployment(deployment):
         repo = config.REPOS.get(deployment['repository']['full_name'])
         if repo:
             update_deployment(deployment, status='pending')
-            for command in repo['commands']:
-                p = Popen(command, cwd=repo['folder'], stderr=PIPE)
-                return_code = p.wait()
-                if return_code != 0:
-                    raise CalledProcessError(return_code,
-                                             command,
-                                             output=p.communicate())
-            update_deployment(deployment, status='success')
-            return True
-        # update_deployment(deployment, status='error')
+            # ansible_hosts and Playbook defined? Then run only Ansible.
+            if 'ansible_hosts' in repo and 'ansible_playbook' in repo:
+                run_ansible_playbook(repo['ansible_hosts'],
+                                     repo['ansible_playbook'])
+                update_deployment(deployment, status='success')
+                return True
+            else:
+                for command in repo['commands']:
+                    p = Popen(command, cwd=repo['folder'], stderr=PIPE)
+                    return_code = p.wait()
+                    if return_code != 0:
+                        raise CalledProcessError(return_code,
+                                                 command,
+                                                 output=p.communicate())
+                update_deployment(deployment, status='success')
+                return True
+    except KeyError as e:
+        message = "ansible playbook or host file is missing in config file."
+        update_deployment(deployment, status='error', message=message)
+        return False
+    except AnsibleError as e:
+        update_deployment(deployment, status='error', message=str(e))
+        return False
     except CalledProcessError as e:
         message = "command: %s ERROR: %s" % (e.cmd, e.output[1])
         update_deployment(deployment, status='error', message=message)
@@ -81,19 +113,16 @@ def process_deployment(deployment):
 
 def create_deployment(pull_request, token):
     """Create a deployment."""
-    repo = config.REPOS.get(pull_request['head']['repo']['full_name'])
     user = pull_request['user']['login']
     # owner = pull_request['head']['repo']['owner']['login']
-    repo_name = pull_request['head']['repo']['full_name']
+    repo = pull_request['head']['repo']['full_name']
     payload = {'environment': 'production', 'deploy_user': user}
-    url = 'https://api.github.com/repos/%s/deployments' % (repo_name)
+    url = 'https://api.github.com/repos/%s/deployments' % (repo)
     headers = {'Content-type': 'application/json'}
     auth = (token, '')
     data = {'ref': pull_request['head']['ref'],
             'payload': payload,
             'description': 'mydesc'}
-    if repo.get('required_contexts'):
-        data['required_contexts'] = repo.get('required_contexts')
     deployment = requests.post(url, data=json.dumps(data), headers=headers,
                                auth=auth)
     # print deployment

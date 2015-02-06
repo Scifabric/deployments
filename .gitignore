@@ -3,3 +3,6 @@ config.py
 *.un~
 *.pyc
 .coverage
+env/
+*.orig
+.noseids

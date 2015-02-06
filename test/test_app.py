@@ -26,11 +26,12 @@ import config
 import json
 from base import Test, PseudoRequest
 from app import app, process_deployment, create_deployment, update_deployment, \
-    communicate_deployment, authorize
+    communicate_deployment, authorize, run_ansible_playbook
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
-    pull_request_closed_merged, deployment, deployment_status
+    pull_request_closed_merged, deployment, deployment_status, \
+    deployment_ansible
 from subprocess import CalledProcessError
 
 
@@ -195,6 +196,61 @@ class TestApp(Test):
         assert update_deployment.called_with(deployment, status='error',
                                              message=str(e))
 
+    @patch('app.run_ansible_playbook')
+    @patch('app.update_deployment')
+    def test_process_deployment_ansible(self, update_deployment,
+                                        run_ansible_playbook):
+        """Test process_deployment ansible method."""
+        repo = {'user/ansible': {
+                    'ansible_hosts': 'ansible_hosts',
+                    'ansible_playbook': 'playbook.yml'}}
+
+        with patch('config.REPOS', repo):
+            res = process_deployment(deployment_ansible)
+            assert res, res
+            assert run_ansible_playbook.called_with(repo['user/ansible']['ansible_hosts'],
+                                                    repo['user/ansible']['ansible_playbook'])
+            assert update_deployment.called_with(deployment_ansible,
+                                                 status='success')
+
+    @patch('app.run_ansible_playbook')
+    @patch('app.update_deployment')
+    def test_process_deployment_ansible_key_error(self, update_deployment,
+                                                  run_ansible_playbook):
+        """Test process_deployment ansible key_error method."""
+        repo = {'user/ansible': {
+                    'nsible_hosts': 'ansible_hosts',
+                    'nsible_playbook': 'playbook.yml'}}
+
+        with patch('config.REPOS', repo):
+            run_ansible_playbook.side_effect = KeyError
+            res = process_deployment(deployment_ansible)
+            message = "ansible playbook or host file is missing in config file."
+            assert update_deployment.called_with(deployment_ansible,
+                                                 status='error',
+                                                 message=message)
+            assert res is False
+
+    @patch('app.run_ansible_playbook')
+    @patch('app.update_deployment')
+    def test_process_deployment_ansible_error(self, update_deployment,
+                                                  run_ansible_playbook):
+        """Test process_deployment ansible error method."""
+        repo = {'user/ansible': {
+                    'ansible_hosts': 'wrong',
+                    'ansible_playbook': 'playook.yml'}}
+
+        with patch('config.REPOS', repo):
+            from ansible.errors import AnsibleError
+            run_ansible_playbook.side_effect = AnsibleError('error')
+            res = process_deployment(deployment_ansible)
+            msg = str(AnsibleError('error'))
+            assert update_deployment.called_with(deployment_ansible,
+                                                 status='error',
+                                                 message=msg)
+            assert res is False, res
+
+
     @patch('app.requests')
     def test_create_deployment(self, requests):
         """Test create_deployment works."""
@@ -316,3 +372,37 @@ class TestApp(Test):
         res = authorize(request, config)
         assert res is False, res
 
+    @patch('app.ansible', autospec=True)
+    @patch('app.callbacks', autospec=True)
+    def test_run_ansible_playbook(self, callbacks, ansible):
+        """Test run ansible playbook works."""
+        ansible_hosts = 'ansible_hosts'
+        playbook = 'playbook.yml'
+
+        stats = MagicMock()
+        callbacks.AggregateStats.return_value = stats
+
+        playbook_cb = MagicMock()
+        callbacks.PlaybookCallbacks.return_value = playbook_cb
+
+        inventory = MagicMock()
+        ansible.inventory.Inventory.return_value = inventory
+
+        runner_cb = MagicMock()
+        callbacks.PlaybookRunnerCallbacks.return_value = runner_cb
+
+        pb = MagicMock()
+        ansible.playbook.PlayBook.return_value = pb
+
+        run_ansible_playbook(ansible_hosts, playbook)
+
+        callbacks.AggregateStats.assert_called_with()
+        callbacks.PlaybookCallbacks.assert_called_with(verbose=0)
+        ansible.inventory.Inventory.assert_called_with(ansible_hosts)
+        callbacks.PlaybookRunnerCallbacks.assert_called_with(stats, verbose=0)
+        ansible.playbook.PlayBook.assert_called_with(playbook=playbook,
+                                                     callbacks=playbook_cb,
+                                                     runner_callbacks=runner_cb,
+                                                     stats=stats,
+                                                     inventory=inventory)
+        pb.run.assert_called_with()

@@ -410,3 +410,9 @@ class TestApp(Test):
                                                      stats=stats,
                                                      inventory=inventory)
         pb.run.assert_called_with()
+
+    @patch('app.requests')
+    def test_get_status(self, requests):
+        """Test get_status works."""
+        res = self.tc.get('/getstatus')
+        assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE

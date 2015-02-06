@@ -26,13 +26,14 @@ import config
 import json
 from base import Test, PseudoRequest
 from app import app, process_deployment, create_deployment, update_deployment, \
-    communicate_deployment, authorize, run_ansible_playbook
+     communicate_deployment, authorize, run_ansible_playbook
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 from github import pull_request_opened, pull_request_closed, \
     pull_request_closed_merged, deployment, deployment_status, \
     deployment_ansible
 from subprocess import CalledProcessError
+from urllib import quote
 
 
 class TestApp(Test):
@@ -44,6 +45,14 @@ class TestApp(Test):
         self.app = app
         self.app.config['TESTING'] = True
         self.tc = self.app.test_client()
+
+    def make_response(self, text, status_code=200):
+        from mock import Mock
+        fake_response = Mock()
+        fake_response.text = text
+        fake_response.json.return_value = json.loads(text)
+        fake_response.status_code = status_code
+        return fake_response
 
     def test_get_403(self):
         """Test GET method returns 403 for non auth."""
@@ -304,8 +313,9 @@ class TestApp(Test):
                                                                  status_url,
                                                                  status)
         requests.post.return_value = PseudoRequest(msg, 200, '')
-        res = communicate_deployment(deployment_status)
-        assert msg in res, res
+        with self.app.test_request_context():
+            res = communicate_deployment(deployment_status)
+            assert msg in res, res
 
     @patch('app.requests')
     def test_communicate_deployment_fails(self, requests):
@@ -313,16 +323,18 @@ class TestApp(Test):
         repo = deployment_status['repository']['full_name']
         repo_url = deployment_status['repository']['url']
         status = deployment_status['deployment_status']['state']
-        status_url = deployment_status['deployment']['url']
+        status_url = 'http://localhost/getstatus?url=' + quote(deployment_status['deployment']['url'], '')
         user = deployment_status['deployment']['payload']['deploy_user']
         msg ='Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
                                                                  repo,
                                                                  user,
                                                                  status_url,
                                                                  status)
+        print msg
         requests.post.side_effect = AttributeError
-        res = communicate_deployment(deployment_status)
-        assert msg in res, res
+        with self.app.test_request_context():
+            res = communicate_deployment(deployment_status)
+            assert msg in res, res
 
     def test_authorize_case_1(self):
         """Test authorize without signature."""
@@ -406,3 +418,38 @@ class TestApp(Test):
                                                      stats=stats,
                                                      inventory=inventory)
         pb.run.assert_called_with()
+
+    @patch('app.requests')
+    def test_get_status_non_url(self, rq_mock):
+        """Test get_status non URL works."""
+        res = self.tc.get('/getstatus')
+        assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE
+
+    @patch('app.requests')
+    def test_get_status_404(self, rq_mock):
+        """Test get_status works."""
+        res = self.tc.get('/getstatus')
+        rq_mock.get.return_value = PseudoRequest(json.dumps(deployment),
+                                                   404,
+                                                   self.json_headers)
+        assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE
+
+    @patch('app.requests')
+    def test_get_status_200(self, rq_mock):
+        """Test get status returns 200."""
+        data = json.dumps(dict(a=1))
+        rq_mock.get.return_value = self.make_response(data)
+        qurl = quote(deployment_status['deployment']['url'], '')
+        url = '/getstatus?url=%s' % qurl
+        res = self.tc.get(url)
+        assert res.status_code == 200, res.status_code
+
+    @patch('app.requests')
+    def test_get_status_valid_url_404(self, rq_mock):
+        """Test get status returns 404."""
+        data = json.dumps(dict(a=1))
+        rq_mock.get.return_value = self.make_response(data, 404)
+        qurl = quote(deployment_status['deployment']['url'], '')
+        url = '/getstatus?url=%s' % qurl
+        res = self.tc.get(url)
+        assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE

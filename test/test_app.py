@@ -420,35 +420,35 @@ class TestApp(Test):
         pb.run.assert_called_with()
 
     @patch('app.requests')
-    def test_get_status_non_url(self, Mock):
+    def test_get_status_non_url(self, rq_mock):
         """Test get_status non URL works."""
         res = self.tc.get('/getstatus')
         assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE
 
     @patch('app.requests')
-    def test_get_status_404(self, Mock):
+    def test_get_status_404(self, rq_mock):
         """Test get_status works."""
         res = self.tc.get('/getstatus')
-        Mock.get.return_value = PseudoRequest(json.dumps(deployment),
+        rq_mock.get.return_value = PseudoRequest(json.dumps(deployment),
                                                    404,
                                                    self.json_headers)
         assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE
 
     @patch('app.requests')
-    def test_get_status_200(self, Mock):
+    def test_get_status_200(self, rq_mock):
         """Test get status returns 200."""
         data = json.dumps(dict(a=1))
-        Mock.get.return_value = self.make_response(data)
+        rq_mock.get.return_value = self.make_response(data)
         qurl = quote(deployment_status['deployment']['url'], '')
         url = '/getstatus?url=%s' % qurl
         res = self.tc.get(url)
         assert res.status_code == 200, res.status_code
 
     @patch('app.requests')
-    def test_get_status_valid_url_404(self, Mock):
+    def test_get_status_valid_url_404(self, rq_mock):
         """Test get status returns 404."""
         data = json.dumps(dict(a=1))
-        Mock.get.return_value = self.make_response(data, 404)
+        rq_mock.get.return_value = self.make_response(data, 404)
         qurl = quote(deployment_status['deployment']['url'], '')
         url = '/getstatus?url=%s' % qurl
         res = self.tc.get(url)

@@ -97,7 +97,8 @@ def run_ansible_playbook(ansible_hosts, playbook):
     for h in hosts:
        t = pb.stats.summarize(h)
        if t['failures'] > 0:
-           raise AnsibleError(t['failures'])
+           msg = "[%s]:[%s] playbook failed!" % (h, playbook)
+           raise AnsibleError(msg)
 
 def process_deployment(deployment):
     """Process deployment."""

@@ -33,17 +33,17 @@ def get_status():
     """Get status."""
     url = request.args.get('url')
     if url:
-       token = config.TOKEN
-       headers = {'Content-type': 'application/json'}
-       auth = (token, '')
-       output = requests.get(url, headers=headers, auth=auth)
-       if output.status_code == 200:
-           resp = Response(response=json.dumps(output.json()),
-                    status=200,
-                    mimetype="application/json")
-           return resp
-       else:
-           return abort(404)
+        token = config.TOKEN
+        headers = {'Content-type': 'application/json'}
+        auth = (token, '')
+        output = requests.get(url, headers=headers, auth=auth)
+        if output.status_code == 200:
+            resp = Response(response=json.dumps(output.json()),
+                     status=200,
+                     mimetype="application/json")
+            return resp
+        else:
+            return abort(404)
     else:
         return abort(404)
 

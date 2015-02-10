@@ -28,6 +28,7 @@ from ansible.errors import AnsibleError
 
 app = Flask(__name__)
 
+
 @app.route("/getstatus")
 def get_status():
     """Get status."""
@@ -39,8 +40,8 @@ def get_status():
         output = requests.get(url, headers=headers, auth=auth)
         if output.status_code == 200:
             resp = Response(response=json.dumps(output.json()),
-                     status=200,
-                     mimetype="application/json")
+                            status=200,
+                            mimetype="application/json")
             return resp
         else:
             return abort(404)
@@ -56,7 +57,8 @@ def event_handler():
             if request.headers.get('X-GitHub-Event') == 'pull_request':
                 if (request.json['action'] == 'closed' and
                         request.json['pull_request']['merged'] is True):
-                    print create_deployment(request.json['pull_request'], config.TOKEN)
+                    print create_deployment(request.json['pull_request'],
+                                            config.TOKEN)
                     return "Pull Request merged!"
                 return "Pull Request created!"
             elif request.headers.get('X-GitHub-Event') == 'deployment':
@@ -76,10 +78,12 @@ def event_handler():
     else:
         return abort(403)
 
+
 def run_ansible_playbook(ansible_hosts, playbook):
     """
-    Run Ansible like ansible-playbook command. Similar to:
-    ansible-playbook -i ansible_hosts playbook.yml
+    Run Ansible like ansible-playbook command.
+
+    Similar to: ansible-playbook -i ansible_hosts playbook.yml
     """
     stats = callbacks.AggregateStats()
     playbook_cb = callbacks.PlaybookCallbacks(verbose=utils.VERBOSITY)
@@ -92,13 +96,13 @@ def run_ansible_playbook(ansible_hosts, playbook):
                                    stats=stats, inventory=inventory)
     pb.run()
 
-
     hosts = sorted(pb.stats.processed.keys())
     for h in hosts:
-       t = pb.stats.summarize(h)
-       if t['failures'] > 0:
-           msg = "[%s]:[%s] playbook failed!" % (h, playbook)
-           raise AnsibleError(msg)
+        t = pb.stats.summarize(h)
+        if t['failures'] > 0:
+            msg = "[%s]:[%s] playbook failed!" % (h, playbook)
+            raise AnsibleError(msg)
+
 
 def process_deployment(deployment):
     """Process deployment."""
@@ -136,7 +140,6 @@ def process_deployment(deployment):
     except OSError as e:
         update_deployment(deployment, status='error', message=str(e))
         return False
-
 
 
 def create_deployment(pull_request, token):
@@ -188,7 +191,7 @@ def communicate_deployment(deployment):
     status_url = url_for('.get_status', url=deployment['deployment']['url'],
                          _external=True)
     user = deployment['deployment']['payload']['deploy_user']
-    msg ='Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
+    msg = 'Repository <%s|%s> has been deployed by *%s* with <%s/statuses|%s>.' % (repo_url,
                                                                  repo,
                                                                  user,
                                                                  status_url,

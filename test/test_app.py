@@ -34,6 +34,7 @@ from github import pull_request_opened, pull_request_closed, \
     deployment_ansible
 from subprocess import CalledProcessError
 from urllib import quote
+from ansible.errors import AnsibleError
 
 
 class TestApp(Test):
@@ -418,6 +419,36 @@ class TestApp(Test):
                                                      stats=stats,
                                                      inventory=inventory)
         pb.run.assert_called_with()
+
+
+    @patch('app.ansible', autospec=True)
+    @patch('app.callbacks', autospec=True)
+    def test_run_ansible_playbook_raises_error(self, callbacks, ansible):
+        """Test run ansible playbook raises error works."""
+        ansible_hosts = 'ansible_hosts'
+        playbook = 'playbook.yml'
+
+        stats = MagicMock()
+
+        callbacks.AggregateStats.return_value = stats
+
+        playbook_cb = MagicMock()
+        callbacks.PlaybookCallbacks.return_value = playbook_cb
+
+        inventory = MagicMock()
+        ansible.inventory.Inventory.return_value = inventory
+
+        runner_cb = MagicMock()
+        callbacks.PlaybookRunnerCallbacks.return_value = runner_cb
+
+        pb = MagicMock()
+        ansible.playbook.PlayBook.return_value = pb
+
+        pb.stats.processed.keys.return_value = ['127.0.0.1']
+        pb.stats.summarize.return_value = {'failures': 1}
+
+        assert_raises(AnsibleError, run_ansible_playbook, ansible_hosts, playbook)
+
 
     @patch('app.requests')
     def test_get_status_non_url(self, rq_mock):

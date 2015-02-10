@@ -207,7 +207,7 @@ def communicate_deployment(deployment):
 
 
 # See http://stackoverflow.com/questions/18168819/how-to-securely-verify-an-hmac-in-python-2-7
-def compare_digest(x, y): # pragma: no cover
+def compare_digest(x, y):  # pragma: no cover
     """Compare to hmac digests."""
     if not (isinstance(x, bytes) and isinstance(y, bytes)):
         raise TypeError("both inputs should be instances of bytes")
@@ -238,6 +238,6 @@ def authorize(request, config):
         return False
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     app.debug = config.DEBUG
     app.run()

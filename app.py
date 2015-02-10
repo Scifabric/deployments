@@ -225,7 +225,7 @@ def authorize(request, config):
     except ValueError:
         return False
     if signature is None or signature == "":
-       return False
+        return False
     if sha_name != 'sha1':
         return False
     mac = hmac.new(config.SECRET, msg=request.data, digestmod=hashlib.sha1)

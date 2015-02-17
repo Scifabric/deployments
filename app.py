@@ -57,9 +57,13 @@ def event_handler():
             if request.headers.get('X-GitHub-Event') == 'pull_request':
                 if (request.json['action'] == 'closed' and
                         request.json['pull_request']['merged'] is True):
-                    print create_deployment(request.json['pull_request'],
+                    res = create_deployment(request.json['pull_request'],
                                             config.TOKEN)
-                    return "Pull Request merged!"
+                    if res.status_code != 200 and res.status_code != 201:
+                        print res.text
+                        return abort(res.status_code)
+                    else:
+                        return "Pull Request merged!"
                 return "Pull Request created!"
             elif request.headers.get('X-GitHub-Event') == 'deployment':
                 print "Process Deployment"
@@ -151,12 +155,12 @@ def create_deployment(pull_request, token):
     url = 'https://api.github.com/repos/%s/deployments' % (repo)
     headers = {'Content-type': 'application/json'}
     auth = (token, '')
-    data = {'ref': pull_request['head']['ref'],
+    data = {'ref': pull_request['head']['sha'],
             'payload': payload,
+            'auto_merge': False,
             'description': 'mydesc'}
     deployment = requests.post(url, data=json.dumps(data), headers=headers,
                                auth=auth)
-    # print deployment
     return deployment
 
 

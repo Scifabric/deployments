@@ -106,10 +106,10 @@ class TestApp(Test):
         assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
         assert "Pull Request created!" in res.data, res.data
 
-    @patch('app.create_deployment')
+    @patch('app.create_deployment', return_value=PseudoRequest(json.dumps(deployment), 200, 'application/json'))
     @patch('app.authorize', return_value=True)
     def test_post_pull_request_closed_merged(self, authorize,
-                                             create_deployment):
+                                             mock_create_deployment):
         """Test POST method with pull request closed and merged event."""
         self.github_headers['X-GitHub-Event'] = 'pull_request'
         headers = self.github_headers.copy()
@@ -119,7 +119,25 @@ class TestApp(Test):
         assert res.status_code == 200, self.ERR_MSG_200_STATUS_CODE
         assert "Pull Request merged!" in res.data, res.data
         data = pull_request_closed_merged['pull_request']
-        assert create_deployment.called_with(data, config.TOKEN)
+        assert mock_create_deployment.called_with(data, config.TOKEN)
+
+        data = pull_request_closed_merged['pull_request']
+        assert mock_create_deployment.called_with(data, config.TOKEN)
+
+    @patch('app.create_deployment', return_value=PseudoRequest(json.dumps(deployment), 404, 'application/json'))
+    @patch('app.authorize', return_value=True)
+    def test_post_pull_request_closed_merged_fails(self, authorize,
+                                             mock_create_deployment):
+        """Test POST method with pull request closed and merged event."""
+        self.github_headers['X-GitHub-Event'] = 'pull_request'
+        headers = self.github_headers.copy()
+        headers.update(self.json_headers)
+        res = self.tc.post('/', data=json.dumps(pull_request_closed_merged),
+                           headers=headers)
+        assert res.status_code == 404, self.ERR_MSG_404_STATUS_CODE
+        data = pull_request_closed_merged['pull_request']
+        assert mock_create_deployment.called_with(data, config.TOKEN)
+
 
     @patch('app.process_deployment')
     @patch('app.authorize', return_value=True)

@@ -26,6 +26,14 @@ the config file.
 
 Copy the config.py.template and rename to config.py. Add your own values.
 
+## Installation requirements
+
+for debian based systems
+
+```bash
+sudo apt-get install python-dev libffi-dev libssl-dev
+```
+
 ## Customizing the commands
 
 You can add as many commands as you want. Just, add a new list, and you will be

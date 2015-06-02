@@ -149,15 +149,19 @@ def process_deployment(deployment):
 def create_deployment(pull_request, token):
     """Create a deployment."""
     user = pull_request['user']['login']
-    # owner = pull_request['head']['repo']['owner']['login']
     repo = pull_request['head']['repo']['full_name']
     payload = {'environment': 'production', 'deploy_user': user}
     url = 'https://api.github.com/repos/%s/deployments' % (repo)
     headers = {'Content-type': 'application/json'}
     auth = (token, '')
+    if config.REPOS[repo].get('required_contexts'):
+        required_contexts = config.REPOS[repo].get('required_contexts')
+    else:
+        required_contexts = []
     data = {'ref': pull_request['head']['sha'],
             'payload': payload,
             'auto_merge': False,
+            'required_contexts': required_contexts,
             'description': 'mydesc'}
     deployment = requests.post(url, data=json.dumps(data), headers=headers,
                                auth=auth)

@@ -8,6 +8,14 @@ Status](https://coveralls.io/repos/PyBossa/deployments/badge.svg)](https://cover
 This is a very simple web server that can be used to automate your deployments
 from Github repositories using command lines, or Ansible.
 
+Basically you merge a branch like this and a deployment kicks in:
+
+![Merging](http://i.imgur.com/A7AfTbE.gif)
+
+Then, Slack notifies you about the progress like this:
+
+![Slack](http://i.imgur.com/HR20vsq.gif)
+
 ## Setup
 
 Basically, go to your repository and add a webhook.  Configure it enabling the

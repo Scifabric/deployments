@@ -10,11 +10,10 @@ from Github repositories using command lines, or Ansible.
 
 Basically you merge a branch like this and a deployment kicks in:
 
-
+![Merging](http://i.imgur.com/A7AfTbE.gif)
 
 Then, Slack notifies you about the progress like this:
 
-![Slack](http://i.imgur.com/sx6y2mW.gif)
 
 ## Setup
 

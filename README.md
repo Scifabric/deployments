@@ -15,7 +15,7 @@ Basically you merge a branch like this and a deployment kicks in:
 
 Then, Slack notifies you about the progress like this:
 
-[![Slack video](http://i.imgur.com/FEhAYhe.gif)](http://imgur.com/sx6y2mW)
+[![Slack video](http://i.imgur.com/sx6y2mW.gif)](http://i.imgur.com/sx6y2mW.gif)
 
 ## Setup
 

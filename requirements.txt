@@ -1,3 +1,6 @@
 flask
+pyOpenSSL
+ndg-httpsclient
+pyasn1
 requests
 ansible==1.9.1

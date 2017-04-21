@@ -1,12 +1,21 @@
 ## Github deployments for your projects
 [![Build
-Status](https://travis-ci.org/PyBossa/deployments.svg)](https://travis-ci.org/PyBossa/deployments)
+Status](https://travis-ci.org/Scifabric/deployments.svg)](https://travis-ci.org/Scifabric/deployments)
 [![Coverage
-Status](https://coveralls.io/repos/PyBossa/deployments/badge.svg)](https://coveralls.io/r/PyBossa/deployments)
-[![Code Health](https://landscape.io/github/PyBossa/deployments/master/landscape.svg?style=flat)](https://landscape.io/github/PyBossa/deployments/master)
+Status](https://coveralls.io/repos/Scifabric/deployments/badge.svg)](https://coveralls.io/r/Scifabric/deployments)
+[![Code Health](https://landscape.io/github/Scifabric/deployments/master/landscape.svg?style=flat)](https://landscape.io/github/Scifabric/deployments/master)
+
 
 This is a very simple web server that can be used to automate your deployments
 from Github repositories using command lines, or Ansible.
+
+Basically you merge a branch like this and a deployment kicks in:
+
+![Merging](http://i.imgur.com/A7AfTbE.gif)
+
+Then, Slack notifies you about the progress like this:
+
+[![Slack video](http://i.imgur.com/sx6y2mW.gif)](http://i.imgur.com/sx6y2mW.gif)
 
 ## Setup
 
@@ -25,6 +34,14 @@ and give it only deployments permissions. Paste it in the variable **TOKEN** in
 the config file.
 
 Copy the config.py.template and rename to config.py. Add your own values.
+
+## Installation requirements
+
+for debian based systems
+
+```bash
+sudo apt-get install python-dev libffi-dev libssl-dev
+```
 
 ## Customizing the commands
 

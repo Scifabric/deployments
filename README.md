@@ -9,13 +9,9 @@ Status](https://coveralls.io/repos/Scifabric/deployments/badge.svg)](https://cov
 This is a very simple web server that can be used to automate your deployments
 from Github repositories using command lines, or Ansible.
 
-Basically you merge a branch like this and a deployment kicks in:
+Basically you merge a branch like this and a deployment kicks in. Check this [video](http://i.imgur.com/A7AfTbE.gif)
 
-![Merging](http://i.imgur.com/A7AfTbE.gif)
-
-Then, Slack notifies you about the progress like this:
-
-[![Slack video](https://media.giphy.com/media/3og0ILWOFNAhxEieju/giphy.gif)](https://media.giphy.com/media/3og0ILWOFNAhxEieju/giphy.gif)
+Then, Slack notifies you about the progress like in this [Video](http://i.imgur.com/ldjRVtU.gifv).
 
 ## Setup
 
